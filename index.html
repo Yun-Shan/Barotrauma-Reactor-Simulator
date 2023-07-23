@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<!--suppress HtmlFormInputWithoutLabel -->
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>潜渊症-反应堆模拟器</title>
+  <link href="./assets/bootstrap.min.css" rel="stylesheet">
+  <link href="./assets/highlight.js.github-dark-dimmed.css" rel="stylesheet">
+  <style>
+      html, body {
+          padding: 0 8px;
+          margin: 0;
+          width: calc(100vw - 8px);
+          height: 100vh;
+          overflow-x: hidden;
+          overflow-y: auto;
+      }
+
+      .view-grid {
+          width: 100%;
+          height: 280px;
+      }
+
+      /* Hide scrollbar for Chrome, Safari and Opera */
+      html::-webkit-scrollbar, body::-webkit-scrollbar {
+          display: none;
+      }
+
+      /* Hide scrollbar for IE, Edge and Firefox */
+      html, body {
+          -ms-overflow-style: none; /* IE and Edge */
+          scrollbar-width: none; /* Firefox */
+      }
+
+      pre, code {
+          padding: 0;
+          height: fit-content;
+      }
+  </style>
+</head>
+<body>
+<nav class="navbar bg-body-tertiary">
+  <div class="container-fluid">
+    <span class="navbar-brand">潜渊症 - 反应堆模拟器</span>
+    <div class="d-flex">
+      <button class="btn btn-outline-primary mx-4" data-bs-toggle="modal" data-bs-target="#modalUserGuide">使用说明</button>
+      <button class="btn btn-outline-primary mx-4" data-bs-toggle="modal" data-bs-target="#modalReportInfo">问题反馈</button>
+      <button class="btn btn-outline-primary mx-4" data-bs-toggle="modal" data-bs-target="#modalProjectInfo">项目信息</button>
+    </div>
+  </div>
+</nav>
+<div class="modal fade" id="modalUserGuide" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5">使用说明</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row alert alert-primary my-2 py-0 justify-content-center">
+          图表
+        </div>
+        <div class="row">
+          <div class="col">
+            此模拟器一共提供6个图表，包括4个折线图和2个仪表盘。其中大部分图表一看就懂无需特别说明，<br/>
+            值得一提的是裂变速率和涡轮输出折线图都各有3个值，这是因为原版反应堆就是有3个值的，而造成反应堆控制模块的性能达不到理论性能的原因就是这3个值，<br/>
+            <b>信号值</b>代表反应堆收到的线控信号，线控信号只能改变目标值，<b>实际值</b>代表反应堆当前实际的值，<b>目标值</b>是反应堆内部逻辑使用的中间变量，反应堆会不断通过线性插值将实际值逼近目标值
+          </div>
+        </div>
+        <div class="row alert alert-primary my-2 py-0 justify-content-center">
+          模拟参数
+        </div>
+        <div class="row">
+          <div class="col">
+            <b>逻辑帧率</b>：游戏分为逻辑帧和渲染帧，其中渲染帧只是显示画面，让游戏持续运行的是逻辑帧。每经过一逻辑帧都代表游戏世界往前推进了一帧。逻辑帧无法通过显卡或steam的帧率显示查看，但通过实验发现逻辑帧最大值为每秒60帧。<br/>
+            <b>倍速</b>：1倍速的情况下模拟速度为真实世界速度，同时也是游戏内正常运行的速度。有时希望快速看到曲线的变化情况，则可以使用倍速功能进行快速模拟<br/>
+            <b>信号延迟帧</b>：这个参数通常建议填0即可，除非发现反应堆曲线和游戏中差距较大可以尝试更改这个值。这个值的概念是从反应堆的负载信号输出到成功计算出目标裂变速率这期间是需要消耗一定的逻辑帧的，但由于这个游戏的信号与帧的研究较少，我们无法确定每增加多少组件会导致增加一逻辑帧<br/>
+            <b>初始裂变速率、初始涡轮输出</b>：设置该值后反应堆从指定的初始状态开始模拟。其中一个用途是将初始涡轮设为100来跳过温控反应堆的启动阶段
+          </div>
+        </div>
+        <div class="row alert alert-primary my-2 py-0 justify-content-center">
+          代码区域说明
+        </div>
+        <div class="row">
+          <div class="col">
+            显然我做不到也不可能将信号处理和负载生成做成拼接组件的模式，模拟器其中一个重要意义就是不再需要在游戏内一点点接线改组件，因此我选择了执行代码的方式来替代拼接组件。<br/>
+            所以需要那么一点点的代码能力，代码区域需要使用JavaScript编写，但只是很简单的运算代码和条件判断代码，更复杂的代码是不需要的，因为就算你写了复杂代码也没法转换成游戏内的组件，只有简单运算和简单判断可以转换成组件<br/>
+            刚开始使用此模拟器时可以使用预设的模板代码并在模板代码的基础上进行修改，你既然能够研究电路，相信很快也能学会简单的代码编写。
+            <br/>
+            <br/>
+            在任何代码区域中，如果你需要记录旧的值，即模拟内存组件的效果，可以使用memory变量，通过设置memory变量的属性来保存值，当然请只设置简单的数字或字符串，不然你也没法搬进游戏用。因为代码如果没有值会直接报错，而不像游戏一样只是不参与运算，所以需要确保每个memory中保存的值都初始化之后才使用<br/>
+            <pre><code class="language-javascript">
+              if (!memory.x) memory.x = 1; // 这里确保x是有值的
+              memory.y = memory.x + 1; // 这时候y使用了上一帧的x的值进行运算
+              memory.x = 各种运算后的结果; // 这时候x更新为这一帧的运算结果
+            </code></pre>
+            <br/>
+            对于负载生成代码，你会得到一个deltaTime参数，deltaTime是这一帧距离上一帧经过的"现实时间"，单位是秒。(这个"现实时间"指的是1倍数情况下的时间，开启模拟器倍数后"现实时间"仍然是一样的)<br/>
+            同时你需要将生成的负载值设置到output.load中<br/>
+            <pre><code class="language-javascript text-start">
+              // 这是一个0.5Hz锯齿波的示例
+              if (!memory.factor) memory.factor = 0; // 这里确保factor是有值的
+              memory.factor = (memory.factor + deltaTime * 0.5) % 1; // 每帧增加0.5倍的帧耗时，但确保不超过1
+              output.load = memory.factor * 1000; // 将factor作为比例系数乘1000，使负载在0~1000波动
+            </code></pre>
+            <br/>
+            对于信号代码，你会得到一个signal参数，代表游戏中反应堆的信号接口，signal.in是反应堆输入的信号，signal.out是反应堆输出的信号，你可以通过下表了解都有哪些的信号<br/>
+            <table class="table">
+              <thead><tr><th scope="col">代码变量</th><th scope="col">对应游戏内反应堆信号</th></tr></thead>
+              <tbody>
+              <tr><td>signal.out.power</td><td>功率输出</td></tr>
+              <tr><td>signal.out.load</td><td>负载输出</td></tr>
+              <tr><td>signal.out.temperature</td><td>温度输出</td></tr>
+              <tr><td>signal.out.allHeatPotential</td><td>燃料输出</td></tr>
+              <tr><td>signal.out.fuelRodDurabilityRate</td><td>燃料剩余百分比</td></tr>
+              <tr><td>signal.in.fissionRate</td><td>设置裂变速率</td></tr>
+              <tr><td>signal.in.turbineOutput</td><td>设置涡轮输出</td></tr>
+              </tbody>
+            </table>
+            你需要将涡轮输出设置到signal.in.turbineOutput中，将裂变速率设置到signal.in.fissionRate中<br/>
+            <pre><code class="language-javascript text-start">
+              // 这是一个涡轮输出拉满，裂变随负载变化的示例，这个示例不考虑是否能正确跟随负载，仅作为一个代码编写示例
+              const maxPower = 3000;
+              signal.in.turbineOutput = 100;
+              signal.in.fissionRate = (signal.out.load / maxPower) * 10 + 10;
+            </code></pre>
+            <br/>
+            以下是一部分游戏内的组件对应的代码<br/>
+            <table class="table">
+              <thead><tr><th scope="col">组件</th><th scope="col">代码</th></tr></thead>
+              <tbody>
+              <tr><td>加法组件</td><td>a + b</td></tr>
+              <tr><td>减法组件</td><td>a - b</td></tr>
+              <tr><td>乘法组件</td><td>a * b</td></tr>
+              <tr><td>除法组件</td><td>a / b</td></tr>
+              <tr><td>模组件</td><td>a % b</td></tr>
+              <tr><td>否组件</td><td>!a</td></tr>
+              <tr><td>幂组件</td><td>Math.pow(a, b)</td></tr>
+              <tr><td>平方根组件</td><td>Math.sqrt(a)</td></tr>
+              <tr><td>任意运算组件限制最大值</td><td>Math.min(a, 最大值)</td></tr>
+              <tr><td>任意运算组件限制最小值</td><td>Math.max(a, 最小值)</td></tr>
+              <tr><td>等于组件</td><td>a == b</td></tr>
+              <tr><td>大于组件</td><td>a &gt; b</td></tr>
+              <tr><td>上整组件</td><td>Math.ceil(a)</td></tr>
+              <tr><td>下整组件</td><td>Math.floor(a)</td></tr>
+              <tr><td>整组件</td><td>Math.round(a)</td></tr>
+              <tr><td>绝对值组件</td><td>Math.abs(a)</td></tr>
+              <tr><td>信号检查组件</td><td>a == 目标信号 ? 输出 : 伪输出</td></tr>
+              <tr><td>内存组件</td><td>memory.a = a</td></tr>
+              <tr><td>与组件</td><td>a &amp;&amp; b</td></tr>
+              <tr><td>或组件</td><td>a || b</td></tr>
+              <tr><td>异或组件</td><td>(a && !b) || (!a && b)</td></tr>
+              <tr><td>正弦组件</td><td>Math.sin(a)</td></tr>
+              <tr><td>余弦组件</td><td>Math.cos(a)</td></tr>
+              <tr><td>正切组件</td><td>Math.tan(a)</td></tr>
+              <tr><td>连接组件</td><td>`${a}分隔符${b}`</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">关闭</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalReportInfo" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5">问题反馈</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        反馈地址(任选)：<br/>
+        贴吧：<br/>
+        Github Issue：<br/>
+        <br/>
+        反馈时请说明提示的报错信息是什么，并尽量附带完整网页截图以及触发报错的操作，如果能有稳定的报错复现流程就再好不过了。
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">关闭</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalProjectInfo" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5">项目信息</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <b>本项目是潜渊症的反应堆模拟器，仅用于在线模拟潜渊症中的反应堆运行，没有其它用途</b><br/>
+        <br/>
+        作者：云闪<br/>
+        项目仓库：<a href="https://github.com/Yun-Shan/Barotrauma-Reactor-Simulator">https://github.com/Yun-Shan/Barotrauma-Reactor-Simulator</a><br/>
+        如果想要了解反应堆的代码运行逻辑，可参考仓库中的reactor.js，此文件中的行为和官方是一致的，并且尽量剔除了无关代码<br/>
+        如果想要查看作者在研究反应堆过程中的一些笔记，可查看仓库中的README.md、MISC.md、BATTERY.md<br/>
+        <br/>
+        感谢官方允许查阅源代码，否则不可能写出模拟器：<a href="https://github.com/Regalis11/Barotrauma">官方仓库</a><br/>
+        模拟器中的反应堆核心运行逻辑是参考官方代码编写完成的<br/>
+        <br/>
+        本项目使用了以下开源项目：<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;<a href="https://getbootstrap.com/">Bootstrap (作为UI界面)</a><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;<a href="https://echarts.apache.org/zh/index.html">ECharts (用于图表生成)</a><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;<a href="https://highlightjs.org/">highlight.js (用于使用说明中的代码示例)</a><br/>
+        本项目使用Jetbrains WebStorm 2023.1.4 (开源License)开发
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">关闭</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="container-fluid text-center">
+  <div class="row">
+    <div id="chart-area" class="col-8">
+      <div class="row">
+        <div class="col-6">
+          <div class="row">
+            <div id="powerLoadChart" class="view-grid"></div>
+          </div>
+          <div class="row">
+            <div id="fissionRateChart" class="view-grid"></div>
+          </div>
+          <div class="row">
+            <div id="turbineOutputChart" class="view-grid"></div>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="row view-grid">
+            <div class="col">
+              <div class="row alert alert-primary my-2 py-0 justify-content-center">
+                信号处理代码
+              </div>
+              <div class="row text-start">
+                <div class="dropdown">
+                  <button class="btn btn-secondary dropdown-toggle mb-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    选择预设模板
+                  </button>
+                  <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" onclick="selectActionCode(1)">标准省油公式(最大功率3000kw)</a></li>
+                    <li><a class="dropdown-item" onclick="selectActionCode(2)">标准温控公式(最大功率3000kw)</a></li>
+                    <li><a class="dropdown-item" onclick="selectActionCode(3)">个人优化温控公式(最大功率3000kw)</a></li>
+                  </ul>
+                </div>
+              </div>
+              <div class="row">
+                <textarea class="form-control" id="textActionCode" rows="7" style="resize: none"></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-6">
+              <div id="fissionRateGaugeChart" class="view-grid"></div>
+            </div>
+            <div class="col-6">
+              <div id="turbineOutputGaugeChart" class="view-grid"></div>
+            </div>
+          </div>
+          <div class="row">
+            <div id="temperatureChart" class="view-grid"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-4">
+      <div class="row">
+        <div class="col-12 alert alert-primary my-2 py-0">
+          反应堆参数配置
+        </div>
+        <form class="col-12" name="formReactorParams">
+          <div class="row">
+            <div class="col-auto">
+              <label for="inputReactorBaseMaxPowerOut" class="col-form-label">反应堆最大功率(填编辑器中的值)</label>
+            </div>
+            <div class="col-auto">
+              <input type="number" id="inputReactorBaseMaxPowerOut" name="reactorBaseMaxPowerOut" class="form-control"
+                     min="3000" max="100000" step="1" value="3000" required>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-auto">
+              潜艇升级中的反应堆最大功率等级
+            </div>
+            <div class="col-auto">
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="reactorMaxPowerOutUpgrade" id="radioReactorMaxPowerOutUpgrade0"
+                       value="0" checked>
+                <label class="form-check-label" for="radioReactorMaxPowerOutUpgrade0">0</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="reactorMaxPowerOutUpgrade" id="radioReactorMaxPowerOutUpgrade1"
+                       value="1">
+                <label class="form-check-label" for="radioReactorMaxPowerOutUpgrade1">1</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="reactorMaxPowerOutUpgrade" id="radioReactorMaxPowerOutUpgrade3"
+                       value="2">
+                <label class="form-check-label" for="radioReactorMaxPowerOutUpgrade3">2</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="reactorMaxPowerOutUpgrade" id="radioReactorMaxPowerOutUpgrade2"
+                       value="3">
+                <label class="form-check-label" for="radioReactorMaxPowerOutUpgrade2">3</label>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-auto">
+              工程师的反应堆最大功率提升天赋
+            </div>
+            <div class="col-auto">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="inputEngineerTalentBuzzing" name="engineerTalentBuzzing">
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="row">
+        <div class="col-12 alert alert-primary my-2 py-0">
+          燃料棒选择(运行期间实时生效)
+        </div>
+        <form class="col-12" name="formFuelRods" onclick="updateFuelRods()">
+          <div class="row">
+            <div class="col-auto">
+              槽位1
+            </div>
+            <div class="col-auto">
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="fuelRod1" value="1" checked>铀
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="fuelRod1" value="2">钍
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="fuelRod1" value="3">雷素
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="fuelRod1" value="0">无
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-auto">
+              槽位2
+            </div>
+            <div class="col-auto">
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="fuelRod2" value="1" checked>铀
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="fuelRod2" value="2">钍
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="fuelRod2" value="3">雷素
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="fuelRod2" value="0">无
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-auto">
+              槽位3
+            </div>
+            <div class="col-auto">
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="fuelRod3" value="1" checked>铀
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="fuelRod3" value="2">钍
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="fuelRod3" value="3">雷素
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="fuelRod3" value="0">无
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-auto">
+              槽位4
+            </div>
+            <div class="col-auto">
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="fuelRod4" value="1" checked>铀
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="fuelRod4" value="2">钍
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="fuelRod4" value="3">雷素
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="fuelRod4" value="0">无
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="row">
+        <div class="col-12 alert alert-primary my-2 py-0">
+          负载生成代码
+        </div>
+        <div class="col-12 text-start">
+          <div class="dropdown">
+            <button class="btn btn-secondary dropdown-toggle mb-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              选择预设模板
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" onclick="selectLoadFormula(1)">0~3000kw，0.08Hz正弦</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="col-12">
+          <textarea class="form-control" id="textLoadFormula" rows="6" style="resize: none"></textarea>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12 alert alert-primary my-2 py-0">
+          模拟参数
+        </div>
+        <div class="col-12">
+          <form class="row text-start" name="formSimulationParam">
+            <div class="col-6">
+              逻辑帧率(游戏正常运行为60帧)<input type="number" class="form-control" name="tps" min="1" max="60" step="1" value="60"
+                                                 required>
+            </div>
+            <div class="col-6">
+              倍速(允许1~10倍模拟速度)<input type="number" class="form-control" name="speed" min="1" max="10" step="1" value="1" required>
+            </div>
+            <div class="col-6">
+              信号延迟帧<input type="number" class="form-control" name="signalDelay" min="0" max="20" step="1" value="0" required>
+            </div>
+            <div class="col-6"></div>
+            <div class="col-6">
+              初始裂变速率<input type="number" class="form-control" name="initFissionRate" min="0" max="100" value="0" required>
+            </div>
+            <div class="col-6">
+              初始涡轮输出<input type="number" class="form-control" name="initTurbineOutput" min="0" max="100" value="0" required>
+            </div>
+          </form>
+        </div>
+        <hr class="my-3">
+        <button id="btnStart" onclick="handleBtnStart()" type="button" class="col-2 mx-2 btn btn-primary">开始</button>
+        <!--        <button id="btnPauseChange" onclick="handleBtnPause()" type="button" class="col-2 mx-2 btn btn-primary" disabled>暂停</button>-->
+        <button id="btnReset" onclick="handleBtnReset()" type="button" class="col-2 mx-2 btn btn-primary" disabled>重置</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="./assets/bootstrap.bundle.min.js"></script>
+<script src="./assets/echarts.min.js"></script>
+<script src="./assets/highlight.js.min.js"></script>
+<script src="./assets/highlight.js.javascript.js"></script>
+<script src="./reactor.js"></script>
+<script>
+  // 图标初始化
+
+  const powerLoadChart = window.echarts.init(document.getElementById('powerLoadChart'));
+  {
+    const option = {
+      title: {
+        text: '负载-功率',
+      },
+      tooltip: {
+        trigger: 'axis',
+        valueFormatter: (value) => value.toFixed(3),
+      },
+      color: ['#5470c6', '#fac858'],
+      legend: {
+        data: ['负载', '功率'],
+      },
+      xAxis: {
+        type: 'value',
+        animation: false,
+        axisLabel: {
+          showMinLabel: false,
+          showMaxLabel: false,
+          color: (value) => {
+            return value >= 0 ? '#000' : '#FFF0';
+          },
+        },
+        axisPointer: {
+          label: {
+            formatter: '{value}秒',
+          },
+        },
+        min: function (value) {
+          return value.min;
+        },
+        max: function (value) {
+          return value.max;
+        },
+      },
+      yAxis: {
+        type: 'value',
+        animation: false,
+        axisLine: {
+          onZero: false,
+        },
+        min: 0,
+        max: function (value) {
+          return Math.max(Math.ceil(value.max / 1000), 3) * 1000;
+        },
+      },
+      series: [
+        {
+          name: '负载',
+          type: 'line',
+          animation: false,
+          showSymbol: false,
+          data: [],
+        },
+        {
+          name: '功率',
+          type: 'line',
+          animation: false,
+          showSymbol: false,
+          data: [],
+        },
+      ]
+    };
+    powerLoadChart.setOption(option);
+  }
+  const fissionRateChart = window.echarts.init(document.getElementById('fissionRateChart'));
+  {
+    let lastMax = 0;
+    const option = {
+      title: {
+        text: '裂变速率',
+      },
+      tooltip: {
+        trigger: 'axis',
+        valueFormatter: (value) => value.toFixed(3),
+      },
+      legend: {
+        data: ['信号值', '目标值', '实际值'],
+      },
+      xAxis: {
+        type: 'value',
+        animation: false,
+        axisLabel: {
+          showMinLabel: false,
+          showMaxLabel: false,
+          color: (value) => {
+            return value >= 0 ? '#000' : '#FFF0';
+          },
+        },
+        axisPointer: {
+          label: {
+            formatter: '{value}秒',
+          },
+        },
+        min: function (value) {
+          return value.min;
+        },
+        max: function (value) {
+          return value.max;
+        },
+      },
+      yAxis: {
+        type: 'value',
+        animation: false,
+        axisLine: {
+          onZero: false,
+        },
+        interval: 10,
+        min: 0,
+        max: function (value) {
+          const newMax = Math.ceil(value.max / 10) * 10;
+          if (newMax > lastMax) {
+            lastMax = newMax;
+          }
+          return lastMax;
+        },
+      },
+      series: [
+        {
+          name: '信号值',
+          type: 'line',
+          animation: false,
+          showSymbol: false,
+          data: [],
+        },
+        {
+          name: '目标值',
+          type: 'line',
+          animation: false,
+          showSymbol: false,
+          data: [],
+        },
+        {
+          name: '实际值',
+          type: 'line',
+          animation: false,
+          showSymbol: false,
+          data: [],
+        },
+      ]
+    };
+    fissionRateChart.setOption(option);
+  }
+  const turbineOutputChart = window.echarts.init(document.getElementById('turbineOutputChart'));
+  {
+    const option = {
+      title: {
+        text: '涡轮输出',
+      },
+      tooltip: {
+        trigger: 'axis',
+        valueFormatter: (value) => value.toFixed(3),
+      },
+      legend: {
+        data: ['信号值', '目标值', '实际值'],
+      },
+      xAxis: {
+        type: 'value',
+        animation: false,
+        axisLabel: {
+          showMinLabel: false,
+          showMaxLabel: false,
+          color: (value) => {
+            return value >= 0 ? '#000' : '#FFF0';
+          },
+        },
+        axisPointer: {
+          label: {
+            formatter: '{value}秒',
+          },
+        },
+        min: function (value) {
+          return value.min;
+        },
+        max: function (value) {
+          return value.max;
+        },
+      },
+      yAxis: {
+        type: 'value',
+        axisLine: {
+          onZero: false,
+        },
+        min: 0,
+        max: 100,
+      },
+      series: [
+        {
+          name: '信号值',
+          type: 'line',
+          animation: false,
+          showSymbol: false,
+          data: [],
+        },
+        {
+          name: '目标值',
+          type: 'line',
+          animation: false,
+          showSymbol: false,
+          data: [],
+        },
+        {
+          name: '实际值',
+          type: 'line',
+          animation: false,
+          showSymbol: false,
+          data: [],
+        },
+      ]
+    };
+    turbineOutputChart.setOption(option);
+  }
+  const fissionRateGaugeChart = window.echarts.init(document.getElementById('fissionRateGaugeChart'));
+  {
+    const option = {
+      series: [
+        {
+          type: 'gauge',
+          center: ['50%', '75%'],
+          radius: '100%',
+          startAngle: 180,
+          endAngle: 0,
+          min: 0,
+          max: 100,
+          axisLine: {
+            lineStyle: {
+              width: 12,
+              color: [[1, '#FF6E76']]
+            }
+          },
+          pointer: {
+            showAbove: false,
+            length: '25%',
+            width: 6,
+            offsetCenter: [0, '-65%'],
+            itemStyle: {
+              color: 'auto'
+            }
+          },
+          axisLabel: {
+            show: false,
+          },
+          axisTick: {
+            show: false,
+          },
+          splitLine: {
+            show: false,
+          },
+          emphasis: {
+            disabled: true,
+          },
+          detail: {
+            fontSize: 30,
+            offsetCenter: [0, '-35%'],
+            valueAnimation: false,
+            formatter: function (value) {
+              return value.toFixed(2);
+            },
+          },
+          title: {
+            offsetCenter: [0, '-10%'],
+            fontSize: 20
+          },
+          animation: false,
+        },
+      ]
+    };
+    fissionRateGaugeChart.setOption(option);
+  }
+  const turbineOutputGaugeChart = window.echarts.init(document.getElementById('turbineOutputGaugeChart'));
+  {
+    const option = {
+      series: [
+        {
+          type: 'gauge',
+          center: ['50%', '75%'],
+          radius: '100%',
+          startAngle: 180,
+          endAngle: 0,
+          min: 0,
+          max: 100,
+          axisLine: {
+            lineStyle: {
+              width: 12,
+              color: [[1, '#FF6E76']]
+            }
+          },
+          pointer: {
+            length: '25%',
+            width: 6,
+            offsetCenter: [0, '-65%'],
+            itemStyle: {
+              color: 'auto'
+            }
+          },
+          axisLabel: {
+            show: false,
+          },
+          axisTick: {
+            show: false,
+          },
+          splitLine: {
+            show: false,
+          },
+          emphasis: {
+            disabled: true,
+          },
+          detail: {
+            fontSize: 30,
+            offsetCenter: [0, '-35%'],
+            valueAnimation: false,
+            formatter: function (value) {
+              return value.toFixed(2);
+            },
+          },
+          title: {
+            offsetCenter: [0, '-10%'],
+            fontSize: 20
+          },
+          animation: false,
+        },
+      ]
+    };
+    turbineOutputGaugeChart.setOption(option);
+  }
+  const temperatureChart = window.echarts.init(document.getElementById('temperatureChart'));
+  {
+    const option = {
+      title: {
+        text: '温度',
+      },
+      tooltip: {
+        trigger: 'axis',
+        valueFormatter: (value) => value.toFixed(2),
+      },
+      legend: {
+        data: ['温度'],
+      },
+      xAxis: {
+        type: 'value',
+        animation: false,
+        axisLabel: {
+          showMinLabel: false,
+          showMaxLabel: false,
+          color: (value) => {
+            return value >= 0 ? '#000' : '#FFF0';
+          },
+        },
+        axisPointer: {
+          label: {
+            formatter: '{value}秒',
+          },
+        },
+        min: function (value) {
+          return value.min;
+        },
+        max: function (value) {
+          return value.max;
+        },
+      },
+      yAxis: {
+        type: 'value',
+        axisLine: {
+          onZero: false,
+        },
+        splitLine: {
+          show: false,
+        },
+        splitArea: {
+          show: true,
+          interval: 6,
+        },
+        min: 0,
+        max: 10000,
+      },
+      series: [
+        {
+          name: '温度',
+          type: 'line',
+          animation: false,
+          showSymbol: false,
+          markLine: {
+            emphasis: {
+              disabled: true,
+            },
+            label: {
+              show: true,
+              formatter: '{b}'
+            },
+            lineStyle: {
+              color: '#FFFA',
+            },
+            data: [
+              {
+                name: '满载温度',
+                yAxis: 5000,
+              },
+              {
+                name: '过热温度',
+                yAxis: 6000,
+              },
+              {
+                name: '融毁温度',
+                yAxis: 7000,
+              },
+            ]
+          },
+          markArea: {
+            animation: false,
+            emphasis: {
+              disabled: true,
+            },
+            data: [
+              [
+                {
+                  yAxis: 0,
+                  itemStyle: {
+                    color: '#7CFFB2',
+                  },
+                },
+                {
+                  yAxis: 5000,
+                },
+              ],
+              [
+                {
+                  yAxis: 5000,
+                  itemStyle: {
+                    color: '#FDDD60',
+                  },
+                },
+                {
+                  yAxis: 6000,
+                },
+              ],
+              [
+                {
+                  yAxis: 6000,
+                  itemStyle: {
+                    color: '#FF8050',
+                  },
+                },
+                {
+                  yAxis: 7000,
+                },
+              ],
+              [
+                {
+                  yAxis: 7000,
+                  itemStyle: {
+                    color: '#FF5E56',
+                  },
+                },
+                {
+                  yAxis: 10000,
+                },
+              ],
+            ],
+          },
+          data: [],
+        },
+      ],
+    };
+    temperatureChart.setOption(option);
+  }
+
+
+  const resizeAll = () => {
+    powerLoadChart.resize();
+    fissionRateChart.resize();
+    turbineOutputChart.resize();
+    fissionRateGaugeChart.resize();
+    turbineOutputGaugeChart.resize();
+    temperatureChart.resize();
+  }
+
+  function resetChartData() {
+    powerLoadChart.setOption({ series: [{ name: '功率', data: [] }, { name: '负载', data: [] }] });
+    fissionRateChart.setOption({ series: [{ name: '信号值', data: [] }, { name: '目标值', data: [] }, { name: '实际值', data: [] }] });
+    fissionRateGaugeChart.setOption({
+      series: [{
+        axisLine: { lineStyle: { width: 12, color: [[1, '#FF6E76']] } },
+        data: [{ name: '裂变速率', value: 0 }]
+      }]
+    });
+    turbineOutputChart.setOption({ series: [{ name: '信号值', data: [] }, { name: '目标值', data: [] }, { name: '实际值', data: [] }] });
+    turbineOutputGaugeChart.setOption({
+      series: [{
+        axisLine: {
+          lineStyle: { width: 12, color: [[1, '#FF6E76']] },
+        },
+        data: [{ name: '涡轮输出', value: 0 }]
+      }]
+    });
+    temperatureChart.setOption({ series: [{ data: [] }] });
+  }
+
+  document.getElementById('chart-area').addEventListener('resize', resizeAll);
+  window.addEventListener('resize', resizeAll);
+</script>
+<script>
+  // 网站核心逻辑
+
+  Array.from(document.getElementsByTagName('form')).forEach(form => {
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      event.stopPropagation();
+    });
+  });
+
+  hljs.highlightAll();
+
+  function selectLoadFormula(idx) {
+    let formula;
+    switch (idx) {
+      case 1: {
+        formula = `let frequency = 0.08;
+if (!memory.phase) memory.phase = 0;
+memory.phase = (memory.phase + deltaTime * frequency) % 1;
+output.load = Math.sin(memory.phase * Math.PI * 2) * 1500 + 1500;`
+        break;
+      }
+    }
+    if (formula && confirm('是否用预设模板覆盖当前内容？')) {
+      document.getElementById('textLoadFormula').value = formula;
+    }
+  }
+
+  function selectActionCode(idx) {
+    let code;
+    switch (idx) {
+      case 1: {
+        code = `let maxPower = 3000;
+signal.in.turbineOutput = 100 * Math.min(signal.out.load / maxPower, 1);
+signal.in.fissionRate = (75 * signal.in.turbineOutput) / signal.out.allHeatPotential;`
+        break;
+      }
+      case 2: {
+        code = `let maxPower = 3000;
+signal.in.turbineOutput = 100;
+let needTemperature = Math.min((signal.out.load / maxPower) * 50, 50);
+signal.in.fissionRate = (50 * needTemperature + 5000) / signal.out.allHeatPotential;`
+        break;
+      }
+      case 3: {
+        code = `let maxPower = 3000;
+signal.in.turbineOutput = 100;
+if (!memory.lastTemperature) memory.lastTemperature = 0;
+let temperatureDiff = Math.abs(memory.lastTemperature - signal.out.temperature);
+let currentTemperature = signal.out.temperature / 100;
+let needTemperature = Math.min((signal.out.load / maxPower) * 50, 50);
+let needFissionRate = (50 * needTemperature + 5000) / signal.out.allHeatPotential;
+if (currentTemperature >= 50 || temperatureDiff * 0.07 > Math.abs(needTemperature - currentTemperature)) {
+  signal.in.fissionRate = needFissionRate;
+} else {
+  const c = needTemperature > currentTemperature ? 5500 : 4500;
+  signal.in.fissionRate = (50 * currentTemperature + c) / signal.out.allHeatPotential;
+}
+memory.lastTemperature = signal.out.temperature;
+`
+        break;
+      }
+    }
+    if (code && confirm('是否用预设模板覆盖当前内容？')) {
+      document.getElementById('textActionCode').value = code;
+    }
+  }
+
+  let runFlag = false;
+  let pauseFlag = false;
+  let currentReactor;
+  let currentCycleFn;
+
+  function getFuelRodTypeList() {
+    const map = ['none', 'uranium', 'thorium', 'fulgurium'];
+    const fuelRodType1 = FuelRodType[map[document.formFuelRods.fuelRod1.value]];
+    const fuelRodType2 = FuelRodType[map[document.formFuelRods.fuelRod2.value]];
+    const fuelRodType3 = FuelRodType[map[document.formFuelRods.fuelRod3.value]];
+    const fuelRodType4 = FuelRodType[map[document.formFuelRods.fuelRod4.value]];
+    return [fuelRodType1, fuelRodType2, fuelRodType3, fuelRodType4].map(it => it ? it.type : undefined);
+  }
+
+  function updateFuelRods() {
+    if (currentReactor) {
+      const list = getFuelRodTypeList();
+      for (let i = 0; i < list.length; i++) {
+        const type = list[i];
+        if (type && (!currentReactor.fuelsContainer[i] || type !== currentReactor.fuelsContainer[i].type)) {
+          currentReactor.fuelsContainer[i] = new FuelRod(type);
+        }
+        if (!type) {
+          currentReactor.fuelsContainer[i] = undefined;
+        }
+      }
+    }
+  }
+
+  function handleBtnStart() {
+    if (runFlag) return;
+    const formReactorParams = document.formReactorParams;
+    if (!formReactorParams.checkValidity()) {
+      formReactorParams.reportValidity();
+      return;
+    }
+    const formSimulationParam = document.formSimulationParam;
+    if (!formSimulationParam.checkValidity()) {
+      formSimulationParam.reportValidity();
+      return;
+    }
+
+    runFlag = true;
+
+    const loadFormula = document.getElementById('textLoadFormula').value;
+    const actionCode = document.getElementById('textActionCode').value;
+
+    const genFnWithContext = (context, code) => {
+      context.console = window.console;
+      return Function(Object.keys(context).join(','), "'use strict';" + code).bind(context);
+    };
+
+    let loadContext = { memory: {}, deltaTime: 0, output: { load: 0 } };
+    const loadEvalFn = genFnWithContext(loadContext, loadFormula);
+    const loadFn = (deltaTime) => {
+      loadContext.deltaTime = deltaTime;
+      loadEvalFn(...Object.values(loadContext));
+      return loadContext.output.load;
+    }
+
+    let actionContext = { memory: {}, signal: {} };
+    const actionEvalFn = genFnWithContext(actionContext, actionCode);
+    const actionFn = (signal) => {
+      actionContext.signal = signal;
+      actionEvalFn(...Object.values(actionContext));
+    }
+
+    document.getElementById('btnStart').disabled = true;
+    // document.getElementById('btnPauseChange').disabled = false;
+    document.getElementById('btnReset').disabled = false;
+
+    currentCycleFn = genRunCycleFn(
+      parseInt(formReactorParams.reactorBaseMaxPowerOut.value),
+      formReactorParams.engineerTalentBuzzing.checked,
+      parseInt(formReactorParams.reactorMaxPowerOutUpgrade.value),
+      getFuelRodTypeList(),
+      parseFloat(formSimulationParam.initFissionRate.value),
+      parseFloat(formSimulationParam.initTurbineOutput.value),
+      parseFloat(formSimulationParam.tps.value),
+      parseFloat(formSimulationParam.speed.value),
+      parseFloat(formSimulationParam.signalDelay.value),
+      actionFn,
+      loadFn,
+    );
+    currentCycleFn();
+  }
+
+  function handleBtnPause() {
+    // TODO
+  }
+
+  function handleBtnReset() {
+    runFlag = false;
+    currentCycleFn = undefined;
+    currentReactor = undefined;
+    resetChartData();
+
+    document.getElementById('btnStart').disabled = false;
+    // document.getElementById('btnPauseChange').disabled = true;
+    document.getElementById('btnReset').disabled = true;
+  }
+
+  function genRunCycleFn(
+    baseMaxPowerOutput, hasTalentEngineerBuzzing, upgradeLevelIncreaseReactorOutput,
+    fuelTypeNameList, initFissionRate, initTurbineOutput,
+    tps, speed, signalDelay,
+    actionFn, loadFn
+  ) {
+    const reactor = new Reactor(baseMaxPowerOutput, 0.2);
+    reactor.hasTalentEngineerBuzzing = hasTalentEngineerBuzzing;
+    reactor.upgradeLevelIncreaseReactorOutput = upgradeLevelIncreaseReactorOutput;
+    for (let i = 0; i < 4; i++) {
+      if (fuelTypeNameList[i] && FuelRodType[fuelTypeNameList[i]]) {
+        reactor.fuelsContainer[i] = new FuelRod(fuelTypeNameList[i]);
+      }
+    }
+    reactor.fissionRate = initFissionRate;
+    reactor.targetFissionRate = initFissionRate;
+    reactor.signal.in.fissionRate = initFissionRate;
+    reactor.turbineOutput = initTurbineOutput;
+    reactor.targetTurbineOutput = initTurbineOutput;
+    reactor.signal.in.turbineOutput = initTurbineOutput;
+    currentReactor = reactor;
+
+    let timer = 0;
+    let deltaTime = 1 / tps;
+    let intervalTime = 1000 / tps;
+    const signalBuffer = [];
+    const chartShowSeconds = 20;
+    const powerData = [];
+    const loadData = [];
+    const fissionRateSignalData = [];
+    const fissionRateTargetData = [];
+    const fissionRateActuallyData = [];
+    const turbineOutputSignalData = [];
+    const turbineOutputTargetData = [];
+    const turbineOutputActuallyData = [];
+    const temperatureData = [];
+    const initLen = tps * chartShowSeconds;
+    for (let i = 0; i < initLen; i++) {
+      powerData[initLen - 1 - i] = [0 - i * deltaTime, 0];
+      loadData[initLen - 1 - i] = [0 - i * deltaTime, 0];
+      fissionRateSignalData[initLen - 1 - i] = [0 - i * deltaTime, 0];
+      fissionRateTargetData[initLen - 1 - i] = [0 - i * deltaTime, 0];
+      fissionRateActuallyData[initLen - 1 - i] = [0 - i * deltaTime, 0];
+      turbineOutputSignalData[initLen - 1 - i] = [0 - i * deltaTime, 0];
+      turbineOutputTargetData[initLen - 1 - i] = [0 - i * deltaTime, 0];
+      turbineOutputActuallyData[initLen - 1 - i] = [0 - i * deltaTime, 0];
+      temperatureData[initLen - 1 - i] = [0 - i * deltaTime, 0];
+    }
+
+    const logic = () => {
+      if (typeof deltaTime !== 'number' || deltaTime <= 0) {
+        // noinspection ExceptionCaughtLocallyJS
+        throw new Error(`invalid deltaTime: ${deltaTime}`);
+      }
+      timer += deltaTime;
+      let load;
+      try {
+        load = loadFn(deltaTime);
+      } catch (e) {
+        throw new Error(`执行负载生成代码时发生异常：${String(e)}`);
+      }
+      reactor.update(deltaTime, load);
+      powerData.shift();
+      loadData.shift();
+      fissionRateSignalData.shift();
+      fissionRateTargetData.shift();
+      fissionRateActuallyData.shift();
+      turbineOutputSignalData.shift();
+      turbineOutputTargetData.shift();
+      turbineOutputActuallyData.shift();
+      temperatureData.shift();
+      temperatureData.push([timer, reactor.temperature * 100]);
+      powerData.push([timer, reactor.signal.out.power]);
+      loadData.push([timer, load]);
+      fissionRateSignalData.push([timer, reactor.signal.in.fissionRate]);
+      fissionRateTargetData.push([timer, reactor.targetFissionRate]);
+      fissionRateActuallyData.push([timer, reactor.fissionRate]);
+      turbineOutputSignalData.push([timer, reactor.signal.in.turbineOutput]);
+      turbineOutputTargetData.push([timer, reactor.targetTurbineOutput]);
+      turbineOutputActuallyData.push([timer, reactor.turbineOutput]);
+      signalBuffer.push(JSON.parse(JSON.stringify(reactor.signal)));
+      if (signalBuffer.length > signalDelay) {
+        const newSignal = signalBuffer.shift();
+        try {
+          actionFn(newSignal);
+        } catch (e) {
+          throw new Error(`执行信号处理代码时发生异常：${String(e)}`);
+        }
+        const newFissionRate = newSignal.in.fissionRate;
+        const newTurbineOutput = newSignal.in.turbineOutput;
+        if (typeof newFissionRate === 'number' && !Number.isNaN(newFissionRate) && Number.isFinite(newFissionRate)) {
+          reactor.signal.in.fissionRate = newFissionRate;
+        }
+        if (typeof newTurbineOutput === 'number' && !Number.isNaN(newTurbineOutput) && Number.isFinite(newTurbineOutput)) {
+          reactor.signal.in.turbineOutput = newTurbineOutput;
+        }
+      }
+    }
+
+    const fn = () => {
+      try {
+        if (!runFlag) return;
+        for (let i = 0; i < speed; i++) {
+          logic();
+        }
+        powerLoadChart.setOption({
+          series: [
+            { name: '功率', data: powerData },
+            { name: '负载', data: loadData },
+          ]
+        });
+        fissionRateChart.setOption({
+          series: [
+            {
+              name: '信号值',
+              data: fissionRateSignalData,
+            },
+            {
+              name: '目标值',
+              data: fissionRateTargetData,
+            },
+            {
+              name: '实际值',
+              data: fissionRateActuallyData,
+            },
+          ]
+        });
+        fissionRateGaugeChart.setOption({
+          series: [{
+            axisLine: {
+              lineStyle: {
+                width: 12,
+                color: [
+                  [reactor.allowedFissionRate[0] / 100, '#FF6E76'],
+                  [reactor.optimalFissionRate[0] / 100, '#FDDD60'],
+                  [reactor.optimalFissionRate[1] / 100, '#7CFFB2'],
+                  [reactor.allowedFissionRate[1] / 100, '#FDDD60'],
+                  [1, '#FF6E76'],
+                ],
+              },
+            },
+            data: [{ value: reactor.targetFissionRate, name: '裂变速率' }]
+          }]
+        });
+        turbineOutputChart.setOption({
+          series: [
+            {
+              name: '信号值',
+              data: turbineOutputSignalData,
+            },
+            {
+              name: '目标值',
+              data: turbineOutputTargetData,
+            },
+            {
+              name: '实际值',
+              data: turbineOutputActuallyData,
+            },
+          ]
+        });
+        turbineOutputGaugeChart.setOption({
+          series: [{
+            axisLine: {
+              lineStyle: {
+                width: 12,
+                color: [
+                  [reactor.allowedTurbineOutput[0] / 100, '#FF6E76'],
+                  [reactor.optimalTurbineOutput[0] / 100, '#FDDD60'],
+                  [reactor.optimalTurbineOutput[1] / 100, '#7CFFB2'],
+                  [reactor.allowedTurbineOutput[1] / 100, '#FDDD60'],
+                  [1, '#FF6E76'],
+                ],
+              },
+            },
+            data: [{ value: reactor.targetTurbineOutput, name: '涡轮输出' }]
+          }]
+        });
+        temperatureChart.setOption({ series: [{ data: temperatureData }] });
+        setTimeout(() => {
+          fn();
+        }, intervalTime);
+      } catch (e) {
+        console.log(e);
+        alert('模拟运行时发生异常，请刷新页面重试。如果可以的话还请截图反馈一下。\n' + String(e));
+      }
+    };
+    return fn;
+  }
+
+  resetChartData();
+</script>
+<script>
+</script>
+</body>
+</html>
