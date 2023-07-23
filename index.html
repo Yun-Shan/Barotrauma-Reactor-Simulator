@@ -90,6 +90,7 @@
             <br/>
             <br/>
             在任何代码区域中，如果你需要记录旧的值，即模拟内存组件的效果，可以使用memory变量，通过设置memory变量的属性来保存值，当然请只设置简单的数字或字符串，不然你也没法搬进游戏用。因为代码如果没有值会直接报错，而不像游戏一样只是不参与运算，所以需要确保每个memory中保存的值都初始化之后才使用<br/>
+            还有一个shareMemory变量，用法和memory是一样的，但是memory不能在负载生成和信号处理之间互通，如果有特殊需求的需要互通内存的可以使用shareMemory<br/>
             <pre><code class="language-javascript">
               if (!memory.x) memory.x = 1; // 这里确保x是有值的
               memory.y = memory.x + 1; // 这时候y使用了上一帧的x的值进行运算
@@ -1084,7 +1085,9 @@ memory.lastTemperature = signal.out.temperature;
       return Function(Object.keys(context).join(','), "'use strict';" + code).bind(context);
     };
 
-    let loadContext = { memory: {}, deltaTime: 0, output: { load: 0 } };
+    const shareMemory = {};
+
+    const loadContext = { memory: {}, shareMemory: shareMemory, deltaTime: 0, output: { load: 0 } };
     const loadEvalFn = genFnWithContext(loadContext, loadFormula);
     const loadFn = (deltaTime) => {
       loadContext.deltaTime = deltaTime;
@@ -1092,7 +1095,7 @@ memory.lastTemperature = signal.out.temperature;
       return loadContext.output.load;
     }
 
-    let actionContext = { memory: {}, signal: {} };
+    const actionContext = { memory: {}, shareMemory: shareMemory, signal: {} };
     const actionEvalFn = genFnWithContext(actionContext, actionCode);
     const actionFn = (signal) => {
       actionContext.signal = signal;
