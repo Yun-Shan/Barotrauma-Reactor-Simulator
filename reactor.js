@@ -142,7 +142,7 @@ class Reactor {
    * 获取实际的燃料消耗速率
    */
   getFuelConsumption() {
-    return this.baseFuelConsumptionRate * (1 - 0.02 * this.upgradeLevelDecreaseFuelConsumption) * (this.hasTalentEngineerCruising ? 0.8 : 1)
+    return this.baseFuelConsumptionRate * (1 - 0.2 * this.upgradeLevelDecreaseFuelConsumption) * (this.hasTalentEngineerCruising ? 0.8 : 1)
   }
 
   /**
