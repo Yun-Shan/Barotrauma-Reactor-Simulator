@@ -2,16 +2,12 @@
 
 需要注意：
 - 电池的充电功率会被四舍五入到10%的倍数
-- 由于继电组件会强行平滑负载，电池如果通过继电器输出，当实际负载跳变时电池的输出实际上会被平滑变化(导致测量负载不等于实际负载)，通过继电器输入同理，充电速率跳变时反应堆仍然会得到平滑后的负载
-
-
-https://github.com/Regalis11/Barotrauma/blob/a122e54c729a9ea77b52721edf2ba15aea2e8774/Barotrauma/BarotraumaShared/SharedSource/Items/Components/Signal/RelayComponent.cs#L164-L180
-
+- 由于继电组件会[强行平滑负载](https://github.com/Regalis11/Barotrauma/blob/a122e54c729a9ea77b52721edf2ba15aea2e8774/Barotrauma/BarotraumaShared/SharedSource/Items/Components/Signal/RelayComponent.cs#L164-L180)，电池如果通过继电器输出，当实际负载跳变时电池的输出实际上会被平滑变化(导致测量负载不等于实际负载)，通过继电器输入同理，充电速率跳变时反应堆仍然会得到平滑后的负载。  
+  因此当接入继电组件时，部分计算变量应当按需改为继电组件的输出。
 
 ```text
 过压保护时：电池输出断开电网，充电按需跳变
 欠压保护时：电池输出连接电网，充电为0
-过压保护至少要功率超过1/10充电功率才启动
 ```
 
 
