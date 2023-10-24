@@ -232,7 +232,7 @@ class Reactor {
       fuelLeft += fuelRod.durability / FuelRodType[fuelRod.typeName].durability;
     }
 
-    this.signal.out.temperature = this.temperature * 100;
+    this.signal.out.temperature = Math.round(this.temperature * 100);
     this.signal.out.allHeatPotential = this.getAllHeatPotential();
     this.signal.out.fuelRodDurabilityRate = fuelLeft;
     this.signal.out.load = load;
