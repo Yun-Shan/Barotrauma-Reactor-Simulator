@@ -1037,7 +1037,8 @@ memory.lastTemperature = signal.out.temperature;
         break;
       }
       case 4: {
-        code = `let baseMaxPower = 3000;
+        code = `// 思路地址：https://tieba.baidu.com/p/8663839130
+let baseMaxPower = 3000;
 signal.in.turbineOutput = signal.out.allHeatPotential == 80 ? 85 : 99.1;
 let clamp = (num, min, max) => Math.min(Math.max(num, min), max);
 // 将这个数称之为最大功率因数，用于自适应反应堆功率升级，4170 * 1.09 * 1.1 = 4999.83 ≈ 5000，由于游戏内信号延迟，这个数字会有短时间的微小波动，但没什么影响
