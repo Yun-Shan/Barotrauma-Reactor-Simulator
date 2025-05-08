@@ -984,10 +984,12 @@
     let formula;
     switch (idx) {
       case 1: {
-        formula = `let frequency = 0.08;
+        formula = `let maxPower = 3000;
+let halfMaxPower = maxPower / 2;
+let frequency = 0.08;
 if (!memory.phase) memory.phase = 0;
 memory.phase = (memory.phase + deltaTime * frequency) % 1;
-output.load = Math.sin(memory.phase * Math.PI * 2) * 1500 + 1500;`
+output.load = Math.sin(memory.phase * Math.PI * 2) * halfMaxPower + halfMaxPower;`
         break;
       }
       case 2: {
