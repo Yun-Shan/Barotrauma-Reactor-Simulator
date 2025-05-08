@@ -1066,8 +1066,7 @@ signal.in.fissionRate = spawnHeat / heatPotentialFactor;
         break;
       }
       case 5: {
-        code = `const maxPower = 3000;
-const deltaTime = 1 / 60
+        code = `const deltaTime = 1 / 60
 if (!memory.lastX) memory.lastX = 0.1;
 if (signal.out.temperature > 0) memory.lastX = signal.out.power / signal.out.temperature;
 let border = memory.lastX * (1000 * deltaTime);
