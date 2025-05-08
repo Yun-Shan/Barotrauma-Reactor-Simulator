@@ -245,8 +245,9 @@
                   <ul class="dropdown-menu">
                     <li><a class="dropdown-item" onclick="selectActionCode(1)">标准省油公式(最大功率3000kw)</a></li>
                     <li><a class="dropdown-item" onclick="selectActionCode(2)">标准温控公式(最大功率3000kw)</a></li>
-                    <li><a class="dropdown-item" onclick="selectActionCode(3)">个人优化温控公式(最大功率3000kw)</a></li>
-                    <li><a class="dropdown-item" onclick="selectActionCode(4)">ZER0-优化温控公式(最大功率3000kw)</a></li>
+                    <li><a class="dropdown-item" onclick="selectActionCode(3)">云闪优化温控公式(最大功率3000kw)</a></li>
+                    <li><a class="dropdown-item" onclick="selectActionCode(4)">露卡优化温控公式(最大功率3000kw)</a></li>
+                    <li><a class="dropdown-item" onclick="selectActionCode(5)">云闪优化温控公式2(最大功率3000kw)</a></li>
                   </ul>
                 </div>
               </div>
@@ -464,7 +465,7 @@
 <script src="./assets/highlight.js.javascript.js"></script>
 <script src="./reactor.js"></script>
 <script>
-  // 图标初始化
+  // 图表初始化
 
   const powerLoadChart = window.echarts.init(document.getElementById('powerLoadChart'));
   {
@@ -1061,6 +1062,25 @@ let spawnHeat = targetTemperature + turbineConsumeHeat;
 // 正则等同于signal.out.temperature < 5200, 10000是个魔法值，目的是尽可能压低裂变防止过热
 let heatPotentialFactor = signal.out.allHeatPotential * (/^(?:[1-4]?.{1,3}|5[0,1]..)$/.test(signal.out.temperature.toString()) ? 2 : 10000);
 signal.in.fissionRate = spawnHeat / heatPotentialFactor;
+`
+        break;
+      }
+      case 5: {
+        code = `const maxPower = 3000;
+const deltaTime = 1 / 60
+if (!memory.lastX) memory.lastX = 0.1;
+if (signal.out.temperature > 0) memory.lastX = signal.out.power / signal.out.temperature;
+let border = memory.lastX * (1000 * deltaTime);
+let targetLoad = signal.out.load;
+if (targetLoad > signal.out.power) targetLoad = Math.min(targetLoad, signal.out.power + border);
+else targetLoad = Math.max(targetLoad, signal.out.power - border);
+
+const fixPower = Math.max(0.1, signal.out.power);
+const fixTemperature = Math.max(0.1, signal.out.temperature);
+const output = (-0.9833333 * (fixPower * fixTemperature) + 166.6667 * fixPower + targetLoad * fixTemperature) / (0.03333334 * fixPower * signal.out.allHeatPotential);
+
+signal.in.turbineOutput = 100;
+signal.in.fissionRate = output;
 `
         break;
       }
