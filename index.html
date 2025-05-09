@@ -247,7 +247,7 @@
                     <li><a class="dropdown-item" onclick="selectActionCode(2)">标准温控公式(最大功率5000kw)</a></li>
                     <li><a class="dropdown-item" onclick="selectActionCode(3)">云闪优化温控公式-旧(最大功率5000kw)</a></li>
                     <li><a class="dropdown-item" onclick="selectActionCode(4)">露卡优化温控公式(最大功率5000kw)</a></li>
-<!--                    <li><a class="dropdown-item" onclick="selectActionCode(5)">KB-PID温控(自适应功率)</a></li> TODO 还未得到授权 -->
+                    <li><a class="dropdown-item" onclick="selectActionCode(5)">KB-PID温控(自适应功率)</a></li>
                     <li><a class="dropdown-item" onclick="selectActionCode(6)">云闪优化温控公式-新(自适应功率)</a></li>
                   </ul>
                 </div>
@@ -1223,14 +1223,6 @@ if (forecastTemperatureDiff * temperatureDiff < 0) { // 这个异号判断可以
     return;
   }
   outputTemperature = forecastTemperatureDiff < 0 ? Math.min(outputTemperature, forecastTemperature) : Math.max(outputTemperature, forecastTemperature);
-} else if (forecastTemperatureDiff === 0) {
-  // 7 这个魔法值最初就有了，一直不知道原理
-  const tempDiff = Math.abs((signal.out.temperature - forecastTemperature) * 7);
-  if (temperatureDiff < 0) {
-    outputTemperature = Math.max(outputTemperature, forecastTemperature - tempDiff);
-  } else {
-    outputTemperature = Math.min(outputTemperature, forecastTemperature + tempDiff);
-  }
 }
 let turbineConsumeHeat = signal.out.allHeatPotential === 80 ? 8500 : 9910;
 let spawnHeat = outputTemperature + turbineConsumeHeat;
