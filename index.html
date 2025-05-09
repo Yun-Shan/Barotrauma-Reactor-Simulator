@@ -243,10 +243,12 @@
                     选择预设模板
                   </button>
                   <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" onclick="selectActionCode(1)">标准省油公式(最大功率3000kw)</a></li>
-                    <li><a class="dropdown-item" onclick="selectActionCode(2)">标准温控公式(最大功率3000kw)</a></li>
-                    <li><a class="dropdown-item" onclick="selectActionCode(3)">个人优化温控公式(最大功率3000kw)</a></li>
-                    <li><a class="dropdown-item" onclick="selectActionCode(4)">ZER0-优化温控公式(最大功率3000kw)</a></li>
+                    <li><a class="dropdown-item" onclick="selectActionCode(1)">标准省油公式(最大功率5000kw)</a></li>
+                    <li><a class="dropdown-item" onclick="selectActionCode(2)">标准温控公式(最大功率5000kw)</a></li>
+                    <li><a class="dropdown-item" onclick="selectActionCode(3)">云闪优化温控公式-旧(最大功率5000kw)</a></li>
+                    <li><a class="dropdown-item" onclick="selectActionCode(4)">露卡优化温控公式(最大功率5000kw)</a></li>
+                    <li><a class="dropdown-item" onclick="selectActionCode(5)">KB-PID温控(自适应功率)</a></li>
+                    <li><a class="dropdown-item" onclick="selectActionCode(6)">云闪优化温控公式-新(自适应功率)</a></li>
                   </ul>
                 </div>
               </div>
@@ -281,7 +283,7 @@
             </div>
             <div class="col-auto">
               <input type="number" id="inputReactorBaseMaxPowerOut" name="reactorBaseMaxPowerOut" class="form-control"
-                     min="3000" max="100000" step="1" value="3000" required>
+                     min="3000" max="100000" step="1" value="5000" required>
             </div>
           </div>
           <div class="row">
@@ -416,8 +418,14 @@
               选择预设模板
             </button>
             <ul class="dropdown-menu">
-              <li><a class="dropdown-item" onclick="selectLoadFormula(1)">0~3000kw，0.08Hz正弦</a></li>
-              <li><a class="dropdown-item" onclick="selectLoadFormula(2)">500/2500kw，0.05Hz方波</a></li>
+              <li><a class="dropdown-item" onclick="selectLoadFormula(1)">0~3000kw，0.06Hz正弦</a></li>
+              <li><a class="dropdown-item" onclick="selectLoadFormula(2)">0~3000kw，0.1Hz正弦</a></li>
+              <li><a class="dropdown-item" onclick="selectLoadFormula(3)">1000/3000kw，0.1Hz方波</a></li>
+              <li><a class="dropdown-item" onclick="selectLoadFormula(4)">1000~5000kw，0.15Hz正弦</a></li>
+              <li><a class="dropdown-item" onclick="selectLoadFormula(5)">1000~5000kw，0.15Hz三角</a></li>
+              <li><a class="dropdown-item" onclick="selectLoadFormula(6)">1000~5000kw，0.1Hz正锯齿</a></li>
+              <li><a class="dropdown-item" onclick="selectLoadFormula(7)">1000~5000kw，0.1Hz反锯齿</a></li>
+              <li><a class="dropdown-item" onclick="selectLoadFormula(8)">1000~5000kw，平缓+剧烈混合波动</a></li>
             </ul>
           </div>
         </div>
@@ -436,7 +444,7 @@
                                                  required>
             </div>
             <div class="col-6">
-              倍速(允许1~10倍模拟速度)<input type="number" class="form-control" name="speed" min="1" max="10" step="1" value="1" required>
+              倍速(允许1~10倍模拟速度)<input type="number" class="form-control" name="speed" min="1" max="10" step="1" value="10" required>
             </div>
             <div class="col-6">
               信号延迟帧<input type="number" class="form-control" name="signalDelay" min="0" max="20" step="1" value="0" required>
@@ -446,7 +454,7 @@
               初始裂变速率<input type="number" class="form-control" name="initFissionRate" min="0" max="100" value="0" required>
             </div>
             <div class="col-6">
-              初始涡轮输出<input type="number" class="form-control" name="initTurbineOutput" min="0" max="100" value="0" required>
+              初始涡轮输出<input type="number" class="form-control" name="initTurbineOutput" min="0" max="100" value="100" required>
             </div>
           </form>
         </div>
@@ -464,7 +472,7 @@
 <script src="./assets/highlight.js.javascript.js"></script>
 <script src="./reactor.js"></script>
 <script>
-  // 图标初始化
+  // 图表初始化
 
   const powerLoadChart = window.echarts.init(document.getElementById('powerLoadChart'));
   {
@@ -983,21 +991,93 @@
     let formula;
     switch (idx) {
       case 1: {
-        formula = `let frequency = 0.08;
+        formula = `let maxPower = 5000;
+let halfMaxPower = maxPower / 2;
+let frequency = 0.06;
 if (!memory.phase) memory.phase = 0;
 memory.phase = (memory.phase + deltaTime * frequency) % 1;
-output.load = Math.sin(memory.phase * Math.PI * 2) * 1500 + 1500;`
+output.load = Math.sin(memory.phase * Math.PI * 2) * halfMaxPower + halfMaxPower;`
         break;
       }
       case 2: {
-        formula = `let frequency = 0.05;
+        formula = `let maxPower = 5000;
+let halfMaxPower = maxPower / 2;
+let frequency = 0.1;
 if (!memory.phase) memory.phase = 0;
 memory.phase = (memory.phase + deltaTime * frequency) % 1;
-output.load = Math.sin(memory.phase * Math.PI * 2) > 0 ? 2500 : 500;`
+output.load = Math.sin(memory.phase * Math.PI * 2) * halfMaxPower + halfMaxPower;`
+        break;
+      }
+      case 3: {
+        formula = `let frequency = 0.1;
+if (!memory.phase) memory.phase = 0;
+memory.phase = (memory.phase + deltaTime * frequency) % 1;
+output.load = Math.sin(memory.phase * Math.PI * 2) > 0 ? 3000 : 1000;`
+        break;
+      }
+      case 4: {
+        formula = `let maxPower = 5000;
+let halfMaxPower = maxPower / 2;
+let frequency = 0.15;
+if (!memory.phase) memory.phase = 0;
+memory.phase = (memory.phase + deltaTime * frequency) % 1;
+output.load = Math.sin(memory.phase * Math.PI * 2) * 2000 + 3000;`
+        break;
+      }
+      case 5: {
+        formula = `let maxPower = 5000;
+let halfMaxPower = maxPower / 2;
+let frequency = 0.15;
+if (!memory.phase) memory.phase = 0;
+memory.phase = (memory.phase + deltaTime * frequency) % 1;
+output.load = (Math.asin(Math.sin(memory.phase * Math.PI * 2)) / Math.PI * 2) * 2000 + 3000;`
+        break;
+      }
+      case 6: {
+        formula = `let maxPower = 5000;
+let frequency = 0.1;
+if (!memory.phase) memory.phase = 0;
+memory.phase = (memory.phase + deltaTime * frequency) % 1;
+output.load = memory.phase % (1 / frequency) * (maxPower - 1000) + 1000;`
+        break;
+      }
+      case 7: {
+        formula = `let maxPower = 5000;
+let frequency = 0.1;
+if (!memory.phase) memory.phase = 0;
+memory.phase = (memory.phase + deltaTime * frequency) % 1;
+output.load = maxPower - memory.phase % (1 / frequency) * (maxPower - 1000);`
+        break;
+      }
+      case 8: {
+        formula = `let maxPower = 5000;
+let halfMaxPower = maxPower / 2;
+let frequency = 0.02;
+if (!memory.phase) memory.phase = 0;
+memory.phase = (memory.phase + deltaTime * frequency) % 1;
+// DeepSeek生成的复杂波形
+function complexWave(x) {
+    if (x < 0.25) {
+        // 平缓上升至y=1（0 ≤ x < 0.25）
+        return -128 * Math.pow(x, 3) + 48 * Math.pow(x, 2);
+    } else if (x < 0.75) {
+        // 剧烈波动区域（0.25 ≤ x < 0.75）
+        const t = (x - 0.25) / 0.5; // 归一化为0-1
+        const main = -2 * t + 1;     // 主波形线性下降
+        const amp = 0.3 * (1 - Math.abs(main)); // 动态振幅控制
+        const highFreq = amp * Math.sin(20 * Math.PI * t); // 高频波动
+        return main + highFreq;
+    } else {
+        // 平缓下降至y=0（0.75 ≤ x ≤ 1）
+        const t = (x - 0.75) / 0.25;
+        return -2 * Math.pow(t, 3) + 3 * Math.pow(t, 2) - 1;
+    }
+}
+output.load = complexWave(memory.phase) * halfMaxPower + halfMaxPower;`
         break;
       }
     }
-    if (formula && confirm('是否用预设模板覆盖当前内容？')) {
+    if (formula && (!document.getElementById('textLoadFormula').value || confirm('是否用预设模板覆盖当前内容？'))) {
       document.getElementById('textLoadFormula').value = formula;
     }
   }
@@ -1006,20 +1086,20 @@ output.load = Math.sin(memory.phase * Math.PI * 2) > 0 ? 2500 : 500;`
     let code;
     switch (idx) {
       case 1: {
-        code = `let maxPower = 3000;
+        code = `let maxPower = 5000;
 signal.in.turbineOutput = 100 * Math.min(signal.out.load / maxPower, 1);
 signal.in.fissionRate = (75 * signal.in.turbineOutput) / signal.out.allHeatPotential;`
         break;
       }
       case 2: {
-        code = `let maxPower = 3000;
+        code = `let maxPower = 5000;
 signal.in.turbineOutput = 100;
 let needTemperature = Math.min((signal.out.load / maxPower) * 50, 50);
 signal.in.fissionRate = (50 * needTemperature + 5000) / signal.out.allHeatPotential;`
         break;
       }
       case 3: {
-        code = `let maxPower = 3000;
+        code = `let maxPower = 5000;
 signal.in.turbineOutput = 100;
 if (!memory.lastTemperature) memory.lastTemperature = 0;
 let temperatureDiff = Math.abs(memory.lastTemperature - signal.out.temperature);
@@ -1038,9 +1118,9 @@ memory.lastTemperature = signal.out.temperature;
       }
       case 4: {
         code = `// 思路地址：https://tieba.baidu.com/p/8663839130
-let baseMaxPower = 3000;
+let baseMaxPower = 5000;
 signal.in.turbineOutput = signal.out.allHeatPotential == 80 ? 85 : 99.1;
-let clamp = (num, min, max) => Math.min(Math.max(num, min), max);
+const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
 // 将这个数称之为最大功率因数，用于自适应反应堆功率升级，4170 * 1.09 * 1.1 = 4999.83 ≈ 5000，由于游戏内信号延迟，这个数字会有短时间的微小波动，但没什么影响
 if (!memory.maxPowerFactor) memory.maxPowerFactor = 1;
 if (signal.out.power > 0) memory.maxPowerFactor = clamp(signal.out.temperature / signal.out.power, 4170 / baseMaxPower, 5000 / baseMaxPower);
@@ -1064,8 +1144,97 @@ signal.in.fissionRate = spawnHeat / heatPotentialFactor;
 `
         break;
       }
+      case 5: {
+        code = `// 思路地址：https://www.bilibili.com/video/BV14sLoz4ET3/
+const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
+// 转移函数
+const transfer = (der, temp) => {
+  if (!memory.transferS) memory.transferS = 0;
+  const ds = der * (temp - memory.transferS);
+  memory.transferS = ds + memory.transferS;
+  return ds * 60 + memory.transferS;
+};
+// 获取目标温度(限制目标温度变化范围正负16.7)
+const getTargetTemp = () => {
+  if (!memory.powerFactor) memory.powerFactor = 1;
+  if (signal.out.temperature > 0) {
+    memory.powerFactor = signal.out.power / signal.out.temperature;
+  }
+  let targetTemperature = clamp(signal.out.load / memory.powerFactor, 0, 5000);
+  targetTemperature = 2 * targetTemperature - signal.out.temperature;
+  if (!memory.fixTemp) memory.fixTemp = 0;
+  targetTemperature = memory.fixTemp + clamp(targetTemperature - memory.fixTemp, -16.7, 16.7);
+  memory.fixTemp = targetTemperature;
+  return targetTemperature;
+};
+// 微分
+const derivativeJudgment = () => {
+  const heatFactor = signal.out.allHeatPotential / 4500;
+  let useTrueOutput = false;
+  if (memory.derTimer >= 0.04) {
+      useTrueOutput = true;
+  } else {
+      if (memory.derCheck == signal.out.load) {
+        memory.derTimer++;
+      } else {
+        memory.derCheck = signal.out.load;
+        memory.derTimer = 0;
+      }
+  }
+  return useTrueOutput ? heatFactor : 0.6;
+};
+const targetTemperature = transfer(derivativeJudgment(), getTargetTemp());
+
+let turbineConsumeHeat = signal.out.allHeatPotential == 80 ? 8600 : 9904;
+let spawnHeat = targetTemperature + turbineConsumeHeat;
+// 正则等同于signal.out.temperature < 5050，目的是过热时尽可能压低裂变防止过热
+let heatPotentialFactor = signal.out.allHeatPotential * (/^(0|[1-9]\\d{0,2}|[1-4]\\d{3}|50[0-4]\\d)$/.test(signal.out.temperature.toString()) ? 2 : 999999);
+signal.in.fissionRate = spawnHeat / heatPotentialFactor;
+signal.in.turbineOutput = signal.out.allHeatPotential === 80 ? 86 : 99.04;
+`
+        break;
+      }
+      case 6: {
+        code = `const deltaTime = 1 / 60;
+const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
+
+if (!memory.maxPower) memory.maxPower = 5000;
+if (signal.out.temperature > 0) {
+  const guessMaxPower = clamp(5000 * signal.out.power / signal.out.temperature, 5000, 10000);
+  memory.maxPower = memory.maxPower + (guessMaxPower - memory.maxPower) * deltaTime;
+}
+
+if (!memory.lastTargetTempture) memory.lastTargetTempture = 0; // 注意 因为时序问题，必须先放这个内存组件再执行LoadNeedTemperature的计算
+const LoadNeedTemperature = 5000 * Math.min(signal.out.load / memory.maxPower, 1);
+
+// 根据预测趋势修正温控限制
+//const maxTemperatureFrameDiff = 1000 * deltaTime; // 16.66666666 => 16.7
+let temperatureDiff = clamp(LoadNeedTemperature - signal.out.temperature, -16.7, 16.7);
+const forecastFactor = 6000 / signal.out.allHeatPotential;
+const forecastTemperatureDiff = forecastFactor * (LoadNeedTemperature - memory.lastTargetTempture);
+const forecastTemperature = LoadNeedTemperature + forecastTemperatureDiff;
+memory.lastTargetTempture = LoadNeedTemperature;
+const targetTemperature = signal.out.temperature + temperatureDiff;
+let outputTemperature = (signal.out.temperature * (deltaTime - 1) + targetTemperature) / deltaTime;
+if (forecastTemperatureDiff * temperatureDiff < 0) { // 这个异号判断可以用下面forecastTemperatureDiff < 0和temperatureDiff < 0的结果，这样可以省一个组件
+  // 这个不需要在游戏中实现，因为游戏中使用异或组件实现min和max，如果其中一个为0就会造成提早return的效果，写在代码里是为了验证即使提早返回也不影响控制功能
+  if (outputTemperature == 0 || forecastTemperature == 0) {
+    signal.in.turbineOutput = signal.out.allHeatPotential === 80 ? 85 : 99.1;
+    return;
+  }
+  outputTemperature = forecastTemperatureDiff < 0 ? Math.min(outputTemperature, forecastTemperature) : Math.max(outputTemperature, forecastTemperature);
+}
+let turbineConsumeHeat = signal.out.allHeatPotential === 80 ? 8500 : 9910;
+let spawnHeat = outputTemperature + turbineConsumeHeat;
+// 正则等同于signal.out.temperature < 5200, 10000是个魔法值，目的是压低裂变防止过热
+let heatPotentialFactor = signal.out.allHeatPotential * (/^(?:[1-4]?.{1,3}|5[0,1]..)$/.test(signal.out.temperature.toString()) ? 2 : 10000);
+signal.in.fissionRate = spawnHeat / heatPotentialFactor;
+signal.in.turbineOutput = signal.out.allHeatPotential === 80 ? 85 : 99.1;
+`
+        break;
+      }
     }
-    if (code && confirm('是否用预设模板覆盖当前内容？')) {
+    if (code && (!document.getElementById('textActionCode').value || confirm('是否用预设模板覆盖当前内容？'))) {
       document.getElementById('textActionCode').value = code;
     }
   }

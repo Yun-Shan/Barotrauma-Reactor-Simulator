@@ -180,7 +180,9 @@ class Reactor {
   update(deltaTime, load) {
     if (deltaTime <= 0) throw Error("经过的时间必须大于0")
     // 限制线控速率
+    this.signal.in.fissionRate = clamp(this.signal.in.fissionRate, 0, 100);
     this.targetFissionRate = adjustValueWithoutOverShooting(this.targetFissionRate, this.signal.in.fissionRate, deltaTime * 5.0);
+    this.signal.in.turbineOutput = clamp(this.signal.in.turbineOutput, 0, 100);
     this.targetTurbineOutput = adjustValueWithoutOverShooting(this.targetTurbineOutput, this.signal.in.turbineOutput, deltaTime * 5.0);
 
     // 计算仪表盘绿色区域
