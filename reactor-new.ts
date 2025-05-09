@@ -1,3 +1,5 @@
+// TODO 需要用新逻辑更新reactor.js(但是好像旧的也能用，有空再更新吧 好麻烦)
+
 type Range = {
   min: number;
   max: number;
