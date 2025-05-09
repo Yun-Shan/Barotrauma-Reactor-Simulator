@@ -1198,25 +1198,24 @@ signal.in.turbineOutput = signal.out.allHeatPotential === 80 ? 86 : 99.04;
         code = `const deltaTime = 1 / 60;
 const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
 
-if (!memory.maxPower) memory.maxPower = 5000;
-if (signal.out.temperature > 0) {
-  const guessMaxPower = clamp(5000 * signal.out.power / signal.out.temperature, 5000, 10000);
-  memory.maxPower = memory.maxPower + (guessMaxPower - memory.maxPower) * deltaTime;
-}
+// 将这个数称之为最大功率因数，用于自适应反应堆功率升级，由于游戏内信号取整，这个数字会有微小波动，虽然会有影响但是没办法
+if (!memory.maxPowerFactor) memory.maxPowerFactor = 1;
+if (signal.out.power > 0) memory.maxPowerFactor = signal.out.temperature / signal.out.power;
 
-if (!memory.lastTargetTempture) memory.lastTargetTempture = 0; // 注意 因为时序问题，必须先放这个内存组件再执行LoadNeedTemperature的计算
-const LoadNeedTemperature = 5000 * Math.min(signal.out.load / memory.maxPower, 1);
+if (!memory.lastTargetTemperature) memory.lastTargetTemperature = 0; // 注意 因为时序问题，必须先放这个内存组件再执行LoadNeedTemperature的计算
+const LoadNeedTemperature = clamp(memory.maxPowerFactor * signal.out.load, 0, 5000);
 
 // 根据预测趋势修正温控限制
 //const maxTemperatureFrameDiff = 1000 * deltaTime; // 16.66666666 => 16.7
 let temperatureDiff = clamp(LoadNeedTemperature - signal.out.temperature, -16.7, 16.7);
 const forecastFactor = 6000 / signal.out.allHeatPotential;
-const forecastTemperatureDiff = forecastFactor * (LoadNeedTemperature - memory.lastTargetTempture);
+const forecastTemperatureDiff = forecastFactor * Math.round(LoadNeedTemperature - memory.lastTargetTemperature);
 const forecastTemperature = LoadNeedTemperature + forecastTemperatureDiff;
-memory.lastTargetTempture = LoadNeedTemperature;
+memory.lastTargetTemperature = LoadNeedTemperature;
 const targetTemperature = signal.out.temperature + temperatureDiff;
+// outputTemperature的三种情况可以用一个输入选择器来选择，只要细心控制好时序就行
 let outputTemperature = (signal.out.temperature * (deltaTime - 1) + targetTemperature) / deltaTime;
-if (forecastTemperatureDiff * temperatureDiff < 0) { // 这个异号判断可以用下面forecastTemperatureDiff < 0和temperatureDiff < 0的结果，这样可以省一个组件
+if (forecastTemperatureDiff * temperatureDiff < 0) {
   // 这个不需要在游戏中实现，因为游戏中使用异或组件实现min和max，如果其中一个为0就会造成提早return的效果，写在代码里是为了验证即使提早返回也不影响控制功能
   if (outputTemperature == 0 || forecastTemperature == 0) {
     signal.in.turbineOutput = signal.out.allHeatPotential === 80 ? 85 : 99.1;
