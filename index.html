@@ -1207,13 +1207,12 @@ const LoadNeedTemperature = clamp(memory.maxPowerFactor * signal.out.load, 0, 50
 
 // 根据预测趋势修正温控限制
 //const maxTemperatureFrameDiff = 1000 * deltaTime; // 16.66666666 => 16.7
-let temperatureDiff = clamp(LoadNeedTemperature - signal.out.temperature, -16.7, 16.7);
+let temperatureDiff = 16.66667 * clamp((signal.out.temperature - LoadNeedTemperature) / 50, -1, 1);
 const forecastFactor = 6000 / signal.out.allHeatPotential;
-const forecastTemperatureDiff = forecastFactor * Math.round(LoadNeedTemperature - memory.lastTargetTemperature);
+let forecastTemperatureDiff = forecastFactor * Math.round(LoadNeedTemperature - memory.lastTargetTemperature);
 const forecastTemperature = LoadNeedTemperature + forecastTemperatureDiff;
 memory.lastTargetTemperature = LoadNeedTemperature;
 const targetTemperature = signal.out.temperature + temperatureDiff;
-// outputTemperature的三种情况可以用一个输入选择器来选择，只要细心控制好时序就行
 let outputTemperature = (signal.out.temperature * (deltaTime - 1) + targetTemperature) / deltaTime;
 if (forecastTemperatureDiff * temperatureDiff < 0) {
   // 这个不需要在游戏中实现，因为游戏中使用异或组件实现min和max，如果其中一个为0就会造成提早return的效果，写在代码里是为了验证即使提早返回也不影响控制功能

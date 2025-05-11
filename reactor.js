@@ -36,7 +36,7 @@ function adjustValueWithoutOverShooting(current, target, speed) {
 
 const FuelRodType = deepFreeze({
   uranium: { type: "uranium", durability: 100, heatPotential: 80 },
-  thorium: { type: "thorium", durability: 200, heatPotential: 80 },
+  thorium: { type: "thorium", durability: 200, heatPotential: 100 },
   fulgurium: { type: "fulgurium", durability: 150, heatPotential: 150 },
 });
 
