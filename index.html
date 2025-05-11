@@ -1207,7 +1207,7 @@ const LoadNeedTemperature = clamp(memory.maxPowerFactor * signal.out.load, 0, 50
 
 // 根据预测趋势修正温控限制
 //const maxTemperatureFrameDiff = 1000 * deltaTime; // 16.66666666 => 16.7
-let temperatureDiff = 16.66667 * clamp((signal.out.temperature - LoadNeedTemperature) / 50, -1, 1);
+let temperatureDiff = 16.66667 * clamp((LoadNeedTemperature - signal.out.temperature) / 50, -1, 1);
 const forecastFactor = 6000 / signal.out.allHeatPotential;
 let forecastTemperatureDiff = forecastFactor * Math.round(LoadNeedTemperature - memory.lastTargetTemperature);
 const forecastTemperature = LoadNeedTemperature + forecastTemperatureDiff;
