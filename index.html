@@ -73,10 +73,11 @@
         </div>
         <div class="row">
           <div class="col">
-            <b>逻辑帧率</b>：游戏分为逻辑帧和渲染帧，其中渲染帧只是显示画面，让游戏持续运行的是逻辑帧。每经过一逻辑帧都代表游戏世界往前推进了一帧。逻辑帧无法通过显卡或steam的帧率显示查看，但通过实验发现逻辑帧最大值为每秒60帧。<br/>
-            <b>倍速</b>：1倍速的情况下模拟速度为真实世界速度，同时也是游戏内正常运行的速度。有时希望快速看到曲线的变化情况，则可以使用倍速功能进行快速模拟<br/>
+            <b>逻辑帧率</b>：设置1倍速时每现实秒执行的逻辑帧数，用于模拟卡顿。游戏每个逻辑帧始终推进1/60秒；例如设为30帧时，每现实秒推进约0.5秒的游戏时间。渲染帧率与逻辑帧率不同。<br/>
+            <b>倍速</b>：按设置的倍数加快逻辑帧执行。60帧、1倍速对应正常游戏速度；降低逻辑帧率可以模拟游戏运行缓慢。实际执行速度还会受到浏览器计算和图表渲染开销影响。<br/>
             <b>信号延迟帧</b>：这个参数通常建议填0即可，除非发现反应堆曲线和游戏中差距较大可以尝试更改这个值。这个值的概念是从反应堆的负载信号输出到成功计算出目标裂变速率这期间是需要消耗一定的逻辑帧的，但由于这个游戏的信号与帧的研究较少，我们无法确定每增加多少组件会导致增加一逻辑帧<br/>
             <b>初始裂变速率、初始涡轮输出</b>：设置该值后反应堆从指定的初始状态开始模拟。其中一个用途是将初始涡轮设为100来跳过温控反应堆的启动阶段
+            <br/><b>燃料棒</b>：替换成相同种类的新燃料棒时，先将该槽位设为“无”，再选择需要的燃料棒。
           </div>
         </div>
         <div class="row alert alert-primary my-2 py-0 justify-content-center">
@@ -89,15 +90,14 @@
             刚开始使用此模拟器时可以使用预设的模板代码并在模板代码的基础上进行修改，你既然能够研究电路，相信很快也能学会简单的代码编写。
             <br/>
             <br/>
-            在任何代码区域中，如果你需要记录旧的值，即模拟内存组件的效果，可以使用memory变量，通过设置memory变量的属性来保存值，当然请只设置简单的数字或字符串，不然你也没法搬进游戏用。因为代码如果没有值会直接报错，而不像游戏一样只是不参与运算，所以需要确保每个memory中保存的值都初始化之后才使用<br/>
-            还有一个shareMemory变量，用法和memory是一样的，但是memory不能在负载生成和信号处理之间互通，如果有特殊需求的需要互通内存的可以使用shareMemory<br/>
+            在任何代码区域中，如果你需要记录旧的值，即模拟内存组件的效果，可以使用memory变量，通过设置memory变量的属性来保存值，当然请只设置简单的数字或字符串，不然你也没法搬进游戏用。负载生成和信号处理代码各自拥有独立的memory。因为代码如果没有值会直接报错，而不像游戏一样只是不参与运算，所以需要确保每个memory中保存的值都初始化之后才使用<br/>
             <pre><code class="language-javascript">
               if (!memory.x) memory.x = 1; // 这里确保x是有值的
               memory.y = memory.x + 1; // 这时候y使用了上一帧的x的值进行运算
               memory.x = 各种运算后的结果; // 这时候x更新为这一帧的运算结果
             </code></pre>
             <br/>
-            对于负载生成代码，你会得到一个deltaTime参数，deltaTime是这一帧距离上一帧经过的"现实时间"，单位是秒。(这个"现实时间"指的是1倍数情况下的时间，开启模拟器倍数后"现实时间"仍然是一样的)<br/>
+            对于负载生成代码，你会得到一个deltaTime参数，表示这一帧推进的游戏时间，单位是秒；无论逻辑帧率和倍速如何设置，它始终为1/60。图表横轴也使用游戏时间。<br/>
             同时你需要将生成的负载值设置到output.load中<br/>
             <pre><code class="language-javascript text-start">
               // 这是一个0.5Hz锯齿波的示例
@@ -106,7 +106,7 @@
               output.load = memory.factor * 1000; // 将factor作为比例系数乘1000，使负载在0~1000波动
             </code></pre>
             <br/>
-            对于信号代码，你会得到一个signal参数，代表游戏中反应堆的信号接口，signal.in是反应堆输入的信号，signal.out是反应堆输出的信号，你可以通过下表了解都有哪些的信号<br/>
+            对于信号代码，你会得到一个signal参数，代表游戏中反应堆的信号接口，signal.in是反应堆输入的信号，signal.out是反应堆输出的信号。输出数值与游戏一样向零截断为整数；模拟器直接使用数字类型，便于JavaScript计算。你可以通过下表了解都有哪些的信号<br/>
             <table class="table">
               <thead><tr><th scope="col">代码变量</th><th scope="col">对应游戏内反应堆信号</th></tr></thead>
               <tbody>
@@ -114,7 +114,7 @@
               <tr><td>signal.out.load</td><td>负载输出</td></tr>
               <tr><td>signal.out.temperature</td><td>温度输出</td></tr>
               <tr><td>signal.out.allHeatPotential</td><td>燃料输出</td></tr>
-              <tr><td>signal.out.fuelRodDurabilityRate</td><td>燃料剩余百分比</td></tr>
+              <tr><td>signal.out.fuelRodDurabilityRate</td><td>各燃料棒剩余百分比之和（每根满棒为100，两根为200）</td></tr>
               <tr><td>signal.in.fissionRate</td><td>设置裂变速率</td></tr>
               <tr><td>signal.in.turbineOutput</td><td>设置涡轮输出</td></tr>
               </tbody>
@@ -127,37 +127,45 @@
               signal.in.fissionRate = (signal.out.load / maxPower) * 10 + 10;
             </code></pre>
             <br/>
-            以下是一部分游戏内的组件对应的代码<br/>
+            以下是一部分游戏内的组件对应的代码。gameMath 函数将输入与每次计算结果转为单精度，支持数值和数字文本；普通 JavaScript 运算符使用双精度。gameMath.round 遇到中点时取偶数，例如 2.5 取整为 2。<br/>
+            四则运算组件默认将结果限制在 -999999 到 999999；可用 gameMath.add(a, b, 最小值, 最大值) 等方式指定组件的输出限制。除数绝对值小于 0.0001 时，游戏中的除法组件不发送信号，此处返回 NaN；控制代码应避免使用没有有效输出的结果。幂运算的结果可能因系统和浏览器数学库不同而有末位差异。<br/>
+            三角函数默认使用角度；最后一个参数设为 true 时使用弧度，例如 gameMath.sin(Math.PI / 2, true)。反三角函数同样用此参数决定输出单位。浏览器与游戏的数学库可能有微小的末位差异。<br/>
             <table class="table">
               <thead><tr><th scope="col">组件</th><th scope="col">代码</th></tr></thead>
               <tbody>
-              <tr><td>加法组件</td><td>a + b</td></tr>
-              <tr><td>减法组件</td><td>a - b</td></tr>
-              <tr><td>乘法组件</td><td>a * b</td></tr>
-              <tr><td>除法组件</td><td>a / b</td></tr>
-              <tr><td>模组件</td><td>a % b</td></tr>
+              <tr><td>加法组件</td><td>gameMath.add(a, b)</td></tr>
+              <tr><td>减法组件</td><td>gameMath.sub(a, b)</td></tr>
+              <tr><td>乘法组件</td><td>gameMath.mul(a, b)</td></tr>
+              <tr><td>除法组件</td><td>gameMath.div(a, b)</td></tr>
+              <tr><td>模组件</td><td>gameMath.mod(a, b)</td></tr>
               <tr><td>否组件</td><td>!a</td></tr>
-              <tr><td>幂组件</td><td>Math.pow(a, b)</td></tr>
-              <tr><td>平方根组件</td><td>Math.sqrt(a)</td></tr>
+              <tr><td>幂组件</td><td>gameMath.pow(a, b)</td></tr>
+              <tr><td>平方根组件</td><td>gameMath.sqrt(a)</td></tr>
+              <tr><td>阶乘组件</td><td>gameMath.factorial(a)</td></tr>
               <tr><td>任意运算组件限制最大值</td><td>Math.min(a, 最大值)</td></tr>
               <tr><td>任意运算组件限制最小值</td><td>Math.max(a, 最小值)</td></tr>
               <tr><td>等于组件</td><td>a == b</td></tr>
               <tr><td>大于组件</td><td>a &gt; b</td></tr>
-              <tr><td>上整组件</td><td>Math.ceil(a)</td></tr>
-              <tr><td>下整组件</td><td>Math.floor(a)</td></tr>
-              <tr><td>整组件</td><td>Math.round(a)</td></tr>
-              <tr><td>绝对值组件</td><td>Math.abs(a)</td></tr>
+              <tr><td>上整组件</td><td>gameMath.ceil(a)</td></tr>
+              <tr><td>下整组件</td><td>gameMath.floor(a)</td></tr>
+              <tr><td>整组件</td><td>gameMath.round(a)</td></tr>
+              <tr><td>绝对值组件</td><td>gameMath.abs(a)</td></tr>
               <tr><td>信号检查组件</td><td>a == 目标信号 ? 输出 : 伪输出</td></tr>
               <tr><td>内存组件</td><td>memory.a = a</td></tr>
               <tr><td>与组件</td><td>a &amp;&amp; b</td></tr>
               <tr><td>或组件</td><td>a || b</td></tr>
               <tr><td>异或组件</td><td>(a && !b) || (!a && b)</td></tr>
-              <tr><td>正弦组件</td><td>Math.sin(a)</td></tr>
-              <tr><td>余弦组件</td><td>Math.cos(a)</td></tr>
-              <tr><td>正切组件</td><td>Math.tan(a)</td></tr>
+              <tr><td>正弦组件</td><td>gameMath.sin(a)</td></tr>
+              <tr><td>余弦组件</td><td>gameMath.cos(a)</td></tr>
+              <tr><td>正切组件</td><td>gameMath.tan(a)</td></tr>
+              <tr><td>反正弦组件</td><td>gameMath.asin(a)</td></tr>
+              <tr><td>反余弦组件</td><td>gameMath.acos(a)</td></tr>
+              <tr><td>反正切组件</td><td>gameMath.atan(a)</td></tr>
+              <tr><td>反正切组件的 y/x 输入</td><td>gameMath.atan2(y, x)</td></tr>
               <tr><td>连接组件</td><td>`${a}分隔符${b}`</td></tr>
               </tbody>
             </table>
+            按游戏逻辑，反正弦和反余弦在输入超出 -1～1 时返回输入；正切在弧度值对 π 取余接近 π/2 时返回转换后的弧度值，例如 gameMath.tan(90) 约为 1.5707964。<br/>
           </div>
         </div>
 
@@ -440,7 +448,7 @@
         <div class="col-12">
           <form class="row text-start" name="formSimulationParam">
             <div class="col-6">
-              逻辑帧率(游戏正常运行为60帧)<input type="number" class="form-control" name="tps" min="1" max="60" step="1" value="60"
+              模拟逻辑帧率（1倍速时每现实秒的帧数）<input type="number" class="form-control" name="tps" min="1" max="60" step="1" value="60"
                                                  required>
             </div>
             <div class="col-6">
@@ -470,6 +478,7 @@
 <script src="./assets/echarts.min.js"></script>
 <script src="./assets/highlight.js.min.js"></script>
 <script src="./assets/highlight.js.javascript.js"></script>
+<script src="./game-math.js"></script>
 <script src="./reactor.js"></script>
 <script>
   // 图表初始化
@@ -1157,7 +1166,8 @@ const transfer = (der, temp) => {
 // 获取目标温度(限制目标温度变化范围正负16.7)
 const getTargetTemp = () => {
   if (!memory.powerFactor) memory.powerFactor = 1;
-  if (signal.out.temperature > 0) {
+  // 温度或功率信号为0时无法估算功率因数，保留上次有效值。
+  if (signal.out.temperature > 0 && signal.out.power > 0) {
     memory.powerFactor = signal.out.power / signal.out.temperature;
   }
   let targetTemperature = clamp(signal.out.load / memory.powerFactor, 0, 5000);
@@ -1256,7 +1266,7 @@ signal.in.turbineOutput = signal.out.allHeatPotential === 80 ? 85 : 99.1;
       const list = getFuelRodTypeList();
       for (let i = 0; i < list.length; i++) {
         const type = list[i];
-        if (type && (!currentReactor.fuelsContainer[i] || type !== currentReactor.fuelsContainer[i].type)) {
+        if (type && (!currentReactor.fuelsContainer[i] || type !== currentReactor.fuelsContainer[i].typeName)) {
           currentReactor.fuelsContainer[i] = new FuelRod(type);
         }
         if (!type) {
@@ -1289,9 +1299,7 @@ signal.in.turbineOutput = signal.out.allHeatPotential === 80 ? 85 : 99.1;
       return Function(Object.keys(context).join(','), "'use strict';" + code).bind(context);
     };
 
-    const shareMemory = {};
-
-    const loadContext = { memory: {}, shareMemory: shareMemory, deltaTime: 0, output: { load: 0 } };
+    const loadContext = { memory: {}, deltaTime: 0, output: { load: 0 } };
     const loadEvalFn = genFnWithContext(loadContext, loadFormula);
     const loadFn = (deltaTime) => {
       loadContext.deltaTime = deltaTime;
@@ -1299,7 +1307,7 @@ signal.in.turbineOutput = signal.out.allHeatPotential === 80 ? 85 : 99.1;
       return loadContext.output.load;
     }
 
-    const actionContext = { memory: {}, shareMemory: shareMemory, signal: {} };
+    const actionContext = { memory: {}, signal: {} };
     const actionEvalFn = genFnWithContext(actionContext, actionCode);
     const actionFn = (signal) => {
       actionContext.signal = signal;
@@ -1364,8 +1372,10 @@ signal.in.turbineOutput = signal.out.allHeatPotential === 80 ? 85 : 99.1;
     currentReactor = reactor;
 
     let timer = 0;
-    let deltaTime = 1 / tps;
-    let intervalTime = 1000 / tps;
+    const logicFramesPerSecond = 60;
+    const logicStep = 1 / logicFramesPerSecond;
+    const intervalTime = 1000 / tps;
+    let nextCycleTime = performance.now();
     const signalBuffer = [];
     const chartShowSeconds = 20;
     const powerData = [];
@@ -1377,32 +1387,28 @@ signal.in.turbineOutput = signal.out.allHeatPotential === 80 ? 85 : 99.1;
     const turbineOutputTargetData = [];
     const turbineOutputActuallyData = [];
     const temperatureData = [];
-    const initLen = tps * chartShowSeconds;
+    const initLen = logicFramesPerSecond * chartShowSeconds;
     for (let i = 0; i < initLen; i++) {
-      powerData[initLen - 1 - i] = [0 - i * deltaTime, 0];
-      loadData[initLen - 1 - i] = [0 - i * deltaTime, 0];
-      fissionRateSignalData[initLen - 1 - i] = [0 - i * deltaTime, 0];
-      fissionRateTargetData[initLen - 1 - i] = [0 - i * deltaTime, 0];
-      fissionRateActuallyData[initLen - 1 - i] = [0 - i * deltaTime, 0];
-      turbineOutputSignalData[initLen - 1 - i] = [0 - i * deltaTime, 0];
-      turbineOutputTargetData[initLen - 1 - i] = [0 - i * deltaTime, 0];
-      turbineOutputActuallyData[initLen - 1 - i] = [0 - i * deltaTime, 0];
-      temperatureData[initLen - 1 - i] = [0 - i * deltaTime, 0];
+      powerData[initLen - 1 - i] = [0 - i * logicStep, 0];
+      loadData[initLen - 1 - i] = [0 - i * logicStep, 0];
+      fissionRateSignalData[initLen - 1 - i] = [0 - i * logicStep, 0];
+      fissionRateTargetData[initLen - 1 - i] = [0 - i * logicStep, 0];
+      fissionRateActuallyData[initLen - 1 - i] = [0 - i * logicStep, 0];
+      turbineOutputSignalData[initLen - 1 - i] = [0 - i * logicStep, 0];
+      turbineOutputTargetData[initLen - 1 - i] = [0 - i * logicStep, 0];
+      turbineOutputActuallyData[initLen - 1 - i] = [0 - i * logicStep, 0];
+      temperatureData[initLen - 1 - i] = [0 - i * logicStep, 0];
     }
 
     const logic = () => {
-      if (typeof deltaTime !== 'number' || deltaTime <= 0) {
-        // noinspection ExceptionCaughtLocallyJS
-        throw new Error(`invalid deltaTime: ${deltaTime}`);
-      }
-      timer += deltaTime;
+      timer += logicStep;
       let load;
       try {
-        load = loadFn(deltaTime);
+        load = loadFn(logicStep);
       } catch (e) {
         throw new Error(`执行负载生成代码时发生异常：${String(e)}`);
       }
-      reactor.update(deltaTime, load);
+      reactor.update(logicStep, load);
       powerData.shift();
       loadData.shift();
       fissionRateSignalData.shift();
@@ -1431,18 +1437,17 @@ signal.in.turbineOutput = signal.out.allHeatPotential === 80 ? 85 : 99.1;
         }
         const newFissionRate = newSignal.in.fissionRate;
         const newTurbineOutput = newSignal.in.turbineOutput;
-        if (typeof newFissionRate === 'number' && !Number.isNaN(newFissionRate) && Number.isFinite(newFissionRate)) {
-          reactor.signal.in.fissionRate = newFissionRate;
-        }
-        if (typeof newTurbineOutput === 'number' && !Number.isNaN(newTurbineOutput) && Number.isFinite(newTurbineOutput)) {
-          reactor.signal.in.turbineOutput = newTurbineOutput;
-        }
+        // 要求数字类型；NaN 沿用原逻辑忽略，其他数值由反应堆限幅。
+        if (typeof newFissionRate !== 'number') throw new Error('裂变速率输入必须为数字');
+        if (typeof newTurbineOutput !== 'number') throw new Error('涡轮输出输入必须为数字');
+        if (!Number.isNaN(newFissionRate)) reactor.signal.in.fissionRate = newFissionRate;
+        if (!Number.isNaN(newTurbineOutput)) reactor.signal.in.turbineOutput = newTurbineOutput;
       }
     }
 
     const fn = () => {
       try {
-        if (!runFlag) return;
+        if (!runFlag || currentCycleFn !== fn) return;
         for (let i = 0; i < speed; i++) {
           logic();
         }
@@ -1519,9 +1524,12 @@ signal.in.turbineOutput = signal.out.allHeatPotential === 80 ? 85 : 99.1;
           }]
         });
         temperatureChart.setOption({ series: [{ data: temperatureData }] });
+        // 计入本轮计算和绘图耗时，避免每一轮都额外等待完整的帧间隔。
+        const currentTime = performance.now();
+        nextCycleTime = Math.max(nextCycleTime + intervalTime, currentTime);
         setTimeout(() => {
           fn();
-        }, intervalTime);
+        }, nextCycleTime - currentTime);
       } catch (e) {
         console.log(e);
         alert('模拟运行时发生异常，请刷新页面重试。如果可以的话还请截图反馈一下。\n' + String(e));

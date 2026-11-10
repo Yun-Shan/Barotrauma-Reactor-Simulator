@@ -15,8 +15,11 @@ function deepFreeze(o) {
   return o;
 }
 
+// C# float 的每次算术运算都会舍入为单精度；状态仍使用 JavaScript 数字存储。
+const f32 = Math.fround;
+
 function lerp(value1, value2, amount) {
-  return value1 + (value2 - value1) * amount
+  return f32(value1 + f32(f32(value2 - value1) * amount));
 }
 
 function clamp(value, left, right) {
@@ -31,7 +34,7 @@ function clamp(value, left, right) {
 }
 
 function adjustValueWithoutOverShooting(current, target, speed) {
-  return target < current ? Math.max(target, current - speed) : Math.min(target, current + speed);
+  return target < current ? Math.max(target, f32(current - speed)) : Math.min(target, f32(current + speed));
 }
 
 const FuelRodType = deepFreeze({
@@ -75,7 +78,7 @@ class Reactor {
   baseFuelConsumptionRate;
 
   constructor(baseMaxPowerOutput, baseFuelConsumptionRate) {
-    this.baseMaxPowerOutput = baseMaxPowerOutput;
+    this.baseMaxPowerOutput = f32(baseMaxPowerOutput);
     this.baseFuelConsumptionRate = baseFuelConsumptionRate;
   }
 
@@ -135,7 +138,10 @@ class Reactor {
    * 获取实际的反应堆最大输出功率
    */
   getMaxOutput() {
-    return this.baseMaxPowerOutput * (1 + 0.03 * this.upgradeLevelIncreaseReactorOutput) * (this.hasTalentEngineerBuzzing ? 1.1 : 1);
+    // 游戏先按升级等级调整基础值，再乘天赋加成。
+    const upgradeFactor = f32(1 + f32(f32(3 / 100) * this.upgradeLevelIncreaseReactorOutput));
+    const upgradedOutput = f32(this.baseMaxPowerOutput * upgradeFactor);
+    return this.hasTalentEngineerBuzzing ? f32(upgradedOutput * f32(1.1)) : upgradedOutput;
   }
 
   /**
@@ -161,8 +167,8 @@ class Reactor {
   /**
    * 获取当前生成热量
    */
-  getGeneratedHeat() {
-    return this.fissionRate * (this.getAllHeatPotential() / 100.0) * 2.0
+  getGeneratedHeat(allHeatPotential = this.getAllHeatPotential()) {
+    return f32(f32(f32(this.fissionRate) * f32(f32(allHeatPotential) / 100)) * 2);
   }
 
   optimalFissionRate = [0, 0];
@@ -172,78 +178,106 @@ class Reactor {
   allowedTurbineOutput = [0, 0];
 
   /**
-   * 模拟游戏中的逻辑刻更新，通过指定deltaTime可模拟不同帧率的反应堆变化情况
+   * 模拟游戏中的逻辑刻更新。游戏的每个逻辑帧使用固定的 1/60 秒步长。
    *
-   * @param deltaTime 距离上一次更新经过的时间(单位：秒)
+   * @param deltaTime 本逻辑帧推进的游戏时间（单位：秒）
    * @param load 当前负载
    */
   update(deltaTime, load) {
     if (deltaTime <= 0) throw Error("经过的时间必须大于0")
+
+    // 游戏传入 Reactor.Update 的 1/60 秒为 float；图表和负载代码仍使用原始时间步长。
+    const floatStep = f32(deltaTime);
+    this.temperature = f32(this.temperature);
+    this.fissionRate = f32(this.fissionRate);
+    this.turbineOutput = f32(this.turbineOutput);
+    this.targetFissionRate = f32(this.targetFissionRate);
+    this.targetTurbineOutput = f32(this.targetTurbineOutput);
+    this.correctTurbineOutput = f32(this.correctTurbineOutput);
+
+    // 电网在反应堆更新前结算，因此功率使用上一帧的温度、涡轮和仪表区域。
+    const reactorLoad = Math.max(f32(load), 0);
+    const powerOut = this.getPowerOutByLoad(reactorLoad);
+
     // 限制线控速率
-    this.signal.in.fissionRate = clamp(this.signal.in.fissionRate, 0, 100);
-    this.targetFissionRate = adjustValueWithoutOverShooting(this.targetFissionRate, this.signal.in.fissionRate, deltaTime * 5.0);
-    this.signal.in.turbineOutput = clamp(this.signal.in.turbineOutput, 0, 100);
-    this.targetTurbineOutput = adjustValueWithoutOverShooting(this.targetTurbineOutput, this.signal.in.turbineOutput, deltaTime * 5.0);
+    this.signal.in.fissionRate = clamp(f32(this.signal.in.fissionRate), 0, 100);
+    this.targetFissionRate = adjustValueWithoutOverShooting(this.targetFissionRate, this.signal.in.fissionRate, f32(floatStep * 5));
+    this.signal.in.turbineOutput = clamp(f32(this.signal.in.turbineOutput), 0, 100);
+    this.targetTurbineOutput = adjustValueWithoutOverShooting(this.targetTurbineOutput, this.signal.in.turbineOutput, f32(floatStep * 5));
 
     // 计算仪表盘绿色区域
     const maxPowerOut = this.getMaxOutput();
     if (maxPowerOut > 0.1) {
-      this.correctTurbineOutput += clamp((load / this.getMaxOutput() * 100) - this.correctTurbineOutput, -20, 20) * deltaTime;
+      const desiredOutput = f32(f32(reactorLoad / maxPowerOut) * 100);
+      const correction = clamp(f32(desiredOutput - this.correctTurbineOutput), -20, 20);
+      this.correctTurbineOutput = f32(this.correctTurbineOutput + f32(correction * floatStep));
     }
     let tolerance = 2.5;
-    this.optimalTurbineOutput = [this.correctTurbineOutput - tolerance, this.correctTurbineOutput + tolerance];
+    this.optimalTurbineOutput = [f32(this.correctTurbineOutput - tolerance), f32(this.correctTurbineOutput + tolerance)];
     tolerance = 5;
-    this.allowedTurbineOutput = [this.correctTurbineOutput - tolerance, this.correctTurbineOutput + tolerance];
-    const allHeatPotential = this.getAllHeatPotential();
-    this.optimalFissionRate = [Math.min(30, allHeatPotential - 30), allHeatPotential - 20];
-    this.allowedFissionRate = [Math.min(20, allHeatPotential - 10), allHeatPotential];
+    this.allowedTurbineOutput = [f32(this.correctTurbineOutput - tolerance), f32(this.correctTurbineOutput + tolerance)];
+    const allHeatPotential = f32(this.getAllHeatPotential());
+    const optimalFissionMax = f32(allHeatPotential - 20);
+    this.optimalFissionRate = [Math.min(30, f32(optimalFissionMax - 10)), optimalFissionMax];
+    this.allowedFissionRate = [Math.min(20, f32(allHeatPotential - 10)), allHeatPotential];
 
     // region 核心逻辑
 
     // 生成的热量
-    const heatAmount = this.getGeneratedHeat();
+    const heatAmount = this.getGeneratedHeat(allHeatPotential);
     // 温度变化量
-    const temperatureDiff = (heatAmount - this.turbineOutput) - this.temperature;
+    const temperatureDiff = f32(f32(heatAmount - this.turbineOutput) - this.temperature);
     // 温度随时间变化 这里是化简后的公式
     // 原公式 (sign(temperatureDiff) * 10.0 * deltaTime).coerceIn(-abs(temperatureDiff), abs(temperatureDiff))
 
     this.temperature = clamp(
-      this.temperature + clamp(Math.sign(temperatureDiff) * 10.0 * deltaTime, -Math.abs(temperatureDiff), Math.abs(temperatureDiff)),
+      f32(this.temperature + clamp(f32(Math.sign(temperatureDiff) * 10 * floatStep), -Math.abs(temperatureDiff), Math.abs(temperatureDiff))),
       0, 100
     );
     // 实际裂变速率是通过lerp函数过渡的
     this.fissionRate = clamp(
-      lerp(this.fissionRate, Math.min(this.targetFissionRate, this.getAllHeatPotential()), deltaTime),
+      lerp(this.fissionRate, Math.min(this.targetFissionRate, allHeatPotential), floatStep),
       0, 100
     );
     // 实际涡轮输出是通过lerp函数过渡的
     this.turbineOutput = clamp(
-      lerp(this.turbineOutput, this.targetTurbineOutput, deltaTime),
+      lerp(this.turbineOutput, this.targetTurbineOutput, floatStep),
       0, 100
     );
 
     // endregion 核心逻辑
 
-    // 计算剩余燃料百分比
+    // 燃料耐久继续近似计算；百分比和累计值按游戏的 float 运算。
     let fuelLeft = 0.0
     for (const fuelRod of this.fuelsContainer) {
       if (!fuelRod) continue;
       if (this.fissionRate > 0) {
-        fuelRod.durability -= this.fissionRate / 100 * this.getFuelConsumption() * deltaTime;
+        fuelRod.durability = Math.max(0, fuelRod.durability - this.fissionRate / 100 * this.getFuelConsumption() * deltaTime);
       }
-      fuelLeft += fuelRod.durability / FuelRodType[fuelRod.typeName].durability;
+      const condition = f32(fuelRod.durability);
+      const maxCondition = f32(FuelRodType[fuelRod.typeName].durability);
+      const conditionPercentage = f32(f32(condition / maxCondition) * 100);
+      fuelLeft = f32(fuelLeft + conditionPercentage);
     }
 
-    this.signal.out.temperature = Math.round(this.temperature * 100);
-    this.signal.out.allHeatPotential = this.getAllHeatPotential();
-    this.signal.out.fuelRodDurabilityRate = fuelLeft;
-    this.signal.out.load = load;
-    this.signal.out.power = this.getPowerOutByLoad(load);
+    // 游戏将输出信号向零截断为整数；燃料剩余量先求各棒百分比之和再截断。
+    this.signal.out.temperature = Math.trunc(f32(this.temperature * 100));
+    // 燃料信号使用本帧消耗前的热值，耗尽的燃料棒从下一帧开始不再提供热值。
+    this.signal.out.allHeatPotential = Math.trunc(allHeatPotential);
+    this.signal.out.fuelRodDurabilityRate = Math.trunc(fuelLeft);
+    this.signal.out.load = Math.trunc(reactorLoad);
+    this.signal.out.power = Math.trunc(powerOut);
   }
 
   getPowerOutByLoad(load) {
-    const powerOut = this.getMinMaxPowerOut();
-    return clamp(load, powerOut[0], powerOut[1]);
+    const [minOutput, maxOutput] = this.getMinMaxPowerOut();
+    const loadLeft = Math.max(f32(load), 0);
+    const outputRange = f32(maxOutput - minOutput);
+    const rawRatio = f32(f32(loadLeft - minOutput) / outputRange);
+    // MathHelper.Max(NaN, 0) 返回 0；正无穷也在游戏中被重置为 0。
+    let ratio = rawRatio > 0 ? rawRatio : 0;
+    if (!Number.isFinite(ratio)) ratio = 0;
+    return clamp(f32(f32(ratio * outputRange) + minOutput), minOutput, maxOutput);
   }
 
   getMinMaxPowerOut() {
@@ -251,20 +285,22 @@ class Reactor {
     let tolerance = 1;
 
     // 容差为3，即涡轮输出在绿色范围内且温度在4000~6000范围内
+    const turbineOutput = f32(this.turbineOutput);
+    const temperature = f32(this.temperature);
     if (
-      this.turbineOutput > this.optimalTurbineOutput[0] && this.turbineOutput < this.optimalTurbineOutput[1]
-      && this.temperature > 40 && this.temperature < 60
+      turbineOutput > f32(this.optimalTurbineOutput[0]) && turbineOutput < f32(this.optimalTurbineOutput[1])
+      && temperature > 40 && temperature < 60
     ) {
       tolerance = 3;
     }
 
     const maxPowerOut = this.getMaxOutput();
 
-    const temperatureFactor = Math.min(this.temperature / 50, 1);
+    const temperatureFactor = Math.min(f32(temperature / 50), 1);
 
     // 根据容差计算输出功率
-    const minOutput = maxPowerOut * clamp(Math.min((this.turbineOutput - tolerance) / 100.0, temperatureFactor), 0, 1);
-    const maxOutput = maxPowerOut * Math.min((this.turbineOutput + tolerance) / 100.0, temperatureFactor);
+    const minOutput = f32(maxPowerOut * clamp(Math.min(f32(f32(turbineOutput - tolerance) / 100), temperatureFactor), 0, 1));
+    const maxOutput = f32(maxPowerOut * Math.min(f32(f32(turbineOutput + tolerance) / 100), temperatureFactor));
 
     return [minOutput, maxOutput];
   }
