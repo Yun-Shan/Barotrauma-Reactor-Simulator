@@ -179,6 +179,7 @@ class Reactor {
 
   /**
    * 模拟游戏中的逻辑刻更新。游戏的每个逻辑帧使用固定的 1/60 秒步长。
+   * 本帧功率按更新前的状态结算，温度信号使用更新后的温度；燃料耐久消耗采用近似计算。
    *
    * @param deltaTime 本逻辑帧推进的游戏时间（单位：秒）
    * @param load 当前负载
@@ -247,7 +248,7 @@ class Reactor {
 
     // endregion 核心逻辑
 
-    // 燃料耐久继续近似计算；百分比和累计值按游戏的 float 运算。
+    // 燃料耐久按裂变速率、消耗速率和 deltaTime 近似递减；百分比和累计值按游戏的 float 运算。
     let fuelLeft = 0.0
     for (const fuelRod of this.fuelsContainer) {
       if (!fuelRod) continue;
@@ -304,4 +305,8 @@ class Reactor {
 
     return [minOutput, maxOutput];
   }
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { Reactor, FuelRod, FuelRodType };
 }

@@ -250,14 +250,7 @@
                   <button class="btn btn-secondary dropdown-toggle mb-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     选择预设模板
                   </button>
-                  <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" onclick="selectActionCode(1)">标准省油公式(最大功率5000kw)</a></li>
-                    <li><a class="dropdown-item" onclick="selectActionCode(2)">标准温控公式(最大功率5000kw)</a></li>
-                    <li><a class="dropdown-item" onclick="selectActionCode(3)">云闪优化温控公式-旧(最大功率5000kw)</a></li>
-                    <li><a class="dropdown-item" onclick="selectActionCode(4)">露卡优化温控公式(最大功率5000kw)</a></li>
-                    <li><a class="dropdown-item" onclick="selectActionCode(5)">KB优化温控(自适应功率)</a></li>
-                    <li><a class="dropdown-item" onclick="selectActionCode(6)">云闪优化温控公式-新(自适应功率)</a></li>
-                  </ul>
+                  <ul class="dropdown-menu" id="actionPresetMenu"></ul>
                 </div>
               </div>
               <div class="row">
@@ -344,16 +337,16 @@
             </div>
             <div class="col-auto">
               <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="fuelRod1" value="1" checked>铀
+                <input class="form-check-input" type="radio" name="fuelRod1" value="uranium" checked>铀
               </div>
               <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="fuelRod1" value="2">钍
+                <input class="form-check-input" type="radio" name="fuelRod1" value="thorium">钍
               </div>
               <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="fuelRod1" value="3">雷素
+                <input class="form-check-input" type="radio" name="fuelRod1" value="fulgurium">雷素
               </div>
               <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="fuelRod1" value="0">无
+                <input class="form-check-input" type="radio" name="fuelRod1" value="">无
               </div>
             </div>
           </div>
@@ -363,16 +356,16 @@
             </div>
             <div class="col-auto">
               <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="fuelRod2" value="1" checked>铀
+                <input class="form-check-input" type="radio" name="fuelRod2" value="uranium" checked>铀
               </div>
               <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="fuelRod2" value="2">钍
+                <input class="form-check-input" type="radio" name="fuelRod2" value="thorium">钍
               </div>
               <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="fuelRod2" value="3">雷素
+                <input class="form-check-input" type="radio" name="fuelRod2" value="fulgurium">雷素
               </div>
               <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="fuelRod2" value="0">无
+                <input class="form-check-input" type="radio" name="fuelRod2" value="">无
               </div>
             </div>
           </div>
@@ -382,16 +375,16 @@
             </div>
             <div class="col-auto">
               <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="fuelRod3" value="1" checked>铀
+                <input class="form-check-input" type="radio" name="fuelRod3" value="uranium" checked>铀
               </div>
               <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="fuelRod3" value="2">钍
+                <input class="form-check-input" type="radio" name="fuelRod3" value="thorium">钍
               </div>
               <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="fuelRod3" value="3">雷素
+                <input class="form-check-input" type="radio" name="fuelRod3" value="fulgurium">雷素
               </div>
               <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="fuelRod3" value="0">无
+                <input class="form-check-input" type="radio" name="fuelRod3" value="">无
               </div>
             </div>
           </div>
@@ -401,16 +394,16 @@
             </div>
             <div class="col-auto">
               <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="fuelRod4" value="1" checked>铀
+                <input class="form-check-input" type="radio" name="fuelRod4" value="uranium" checked>铀
               </div>
               <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="fuelRod4" value="2">钍
+                <input class="form-check-input" type="radio" name="fuelRod4" value="thorium">钍
               </div>
               <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="fuelRod4" value="3">雷素
+                <input class="form-check-input" type="radio" name="fuelRod4" value="fulgurium">雷素
               </div>
               <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="fuelRod4" value="0">无
+                <input class="form-check-input" type="radio" name="fuelRod4" value="">无
               </div>
             </div>
           </div>
@@ -425,16 +418,7 @@
             <button class="btn btn-secondary dropdown-toggle mb-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
               选择预设模板
             </button>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item" onclick="selectLoadFormula(1)">0~3000kw，0.06Hz正弦</a></li>
-              <li><a class="dropdown-item" onclick="selectLoadFormula(2)">0~3000kw，0.1Hz正弦</a></li>
-              <li><a class="dropdown-item" onclick="selectLoadFormula(3)">1000/3000kw，0.1Hz方波</a></li>
-              <li><a class="dropdown-item" onclick="selectLoadFormula(4)">1000~5000kw，0.15Hz正弦</a></li>
-              <li><a class="dropdown-item" onclick="selectLoadFormula(5)">1000~5000kw，0.15Hz三角</a></li>
-              <li><a class="dropdown-item" onclick="selectLoadFormula(6)">1000~5000kw，0.1Hz正锯齿</a></li>
-              <li><a class="dropdown-item" onclick="selectLoadFormula(7)">1000~5000kw，0.1Hz反锯齿</a></li>
-              <li><a class="dropdown-item" onclick="selectLoadFormula(8)">1000~5000kw，平缓+剧烈混合波动</a></li>
-            </ul>
+            <ul class="dropdown-menu" id="loadPresetMenu"></ul>
           </div>
         </div>
         <div class="col-12">
@@ -468,7 +452,6 @@
         </div>
         <hr class="my-3">
         <button id="btnStart" onclick="handleBtnStart()" type="button" class="col-2 mx-2 btn btn-primary">开始</button>
-        <!--        <button id="btnPauseChange" onclick="handleBtnPause()" type="button" class="col-2 mx-2 btn btn-primary" disabled>暂停</button>-->
         <button id="btnReset" onclick="handleBtnReset()" type="button" class="col-2 mx-2 btn btn-primary" disabled>重置</button>
       </div>
     </div>
@@ -480,6 +463,8 @@
 <script src="./assets/highlight.js.javascript.js"></script>
 <script src="./game-math.js"></script>
 <script src="./reactor.js"></script>
+<script src="./simulation-controller.js"></script>
+<script src="./preset-templates.js"></script>
 <script>
   // 图表初始化
 
@@ -996,288 +981,85 @@
 
   hljs.highlightAll();
 
-  function selectLoadFormula(idx) {
-    let formula;
-    switch (idx) {
-      case 1: {
-        formula = `let maxPower = 5000;
-let halfMaxPower = maxPower / 2;
-let frequency = 0.06;
-if (!memory.phase) memory.phase = 0;
-memory.phase = (memory.phase + deltaTime * frequency) % 1;
-output.load = Math.sin(memory.phase * Math.PI * 2) * halfMaxPower + halfMaxPower;`
-        break;
-      }
-      case 2: {
-        formula = `let maxPower = 5000;
-let halfMaxPower = maxPower / 2;
-let frequency = 0.1;
-if (!memory.phase) memory.phase = 0;
-memory.phase = (memory.phase + deltaTime * frequency) % 1;
-output.load = Math.sin(memory.phase * Math.PI * 2) * halfMaxPower + halfMaxPower;`
-        break;
-      }
-      case 3: {
-        formula = `let frequency = 0.1;
-if (!memory.phase) memory.phase = 0;
-memory.phase = (memory.phase + deltaTime * frequency) % 1;
-output.load = Math.sin(memory.phase * Math.PI * 2) > 0 ? 3000 : 1000;`
-        break;
-      }
-      case 4: {
-        formula = `let maxPower = 5000;
-let halfMaxPower = maxPower / 2;
-let frequency = 0.15;
-if (!memory.phase) memory.phase = 0;
-memory.phase = (memory.phase + deltaTime * frequency) % 1;
-output.load = Math.sin(memory.phase * Math.PI * 2) * 2000 + 3000;`
-        break;
-      }
-      case 5: {
-        formula = `let maxPower = 5000;
-let halfMaxPower = maxPower / 2;
-let frequency = 0.15;
-if (!memory.phase) memory.phase = 0;
-memory.phase = (memory.phase + deltaTime * frequency) % 1;
-output.load = (Math.asin(Math.sin(memory.phase * Math.PI * 2)) / Math.PI * 2) * 2000 + 3000;`
-        break;
-      }
-      case 6: {
-        formula = `let maxPower = 5000;
-let frequency = 0.1;
-if (!memory.phase) memory.phase = 0;
-memory.phase = (memory.phase + deltaTime * frequency) % 1;
-output.load = memory.phase % (1 / frequency) * (maxPower - 1000) + 1000;`
-        break;
-      }
-      case 7: {
-        formula = `let maxPower = 5000;
-let frequency = 0.1;
-if (!memory.phase) memory.phase = 0;
-memory.phase = (memory.phase + deltaTime * frequency) % 1;
-output.load = maxPower - memory.phase % (1 / frequency) * (maxPower - 1000);`
-        break;
-      }
-      case 8: {
-        formula = `let maxPower = 5000;
-let halfMaxPower = maxPower / 2;
-let frequency = 0.02;
-if (!memory.phase) memory.phase = 0;
-memory.phase = (memory.phase + deltaTime * frequency) % 1;
-// DeepSeek生成的复杂波形
-function complexWave(x) {
-    if (x < 0.25) {
-        // 平缓上升至y=1（0 ≤ x < 0.25）
-        return -128 * Math.pow(x, 3) + 48 * Math.pow(x, 2);
-    } else if (x < 0.75) {
-        // 剧烈波动区域（0.25 ≤ x < 0.75）
-        const t = (x - 0.25) / 0.5; // 归一化为0-1
-        const main = -2 * t + 1;     // 主波形线性下降
-        const amp = 0.3 * (1 - Math.abs(main)); // 动态振幅控制
-        const highFreq = amp * Math.sin(20 * Math.PI * t); // 高频波动
-        return main + highFreq;
-    } else {
-        // 平缓下降至y=0（0.75 ≤ x ≤ 1）
-        const t = (x - 0.75) / 0.25;
-        return -2 * Math.pow(t, 3) + 3 * Math.pow(t, 2) - 1;
-    }
-}
-output.load = complexWave(memory.phase) * halfMaxPower + halfMaxPower;`
-        break;
-      }
-    }
-    if (formula && (!document.getElementById('textLoadFormula').value || confirm('是否用预设模板覆盖当前内容？'))) {
-      document.getElementById('textLoadFormula').value = formula;
+  function initializePresetMenu(menuId, textareaId, templates) {
+    const menu = document.getElementById(menuId);
+    const textarea = document.getElementById(textareaId);
+    for (const template of templates) {
+      const item = document.createElement('li');
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'dropdown-item';
+      button.textContent = template.name;
+      button.addEventListener('click', () => {
+        if (!textarea.value || confirm('是否用预设模板覆盖当前内容？')) {
+          textarea.value = template.code;
+        }
+      });
+      item.appendChild(button);
+      menu.appendChild(item);
     }
   }
 
-  function selectActionCode(idx) {
-    let code;
-    switch (idx) {
-      case 1: {
-        code = `let maxPower = 5000;
-signal.in.turbineOutput = 100 * Math.min(signal.out.load / maxPower, 1);
-signal.in.fissionRate = (75 * signal.in.turbineOutput) / signal.out.allHeatPotential;`
-        break;
-      }
-      case 2: {
-        code = `let maxPower = 5000;
-signal.in.turbineOutput = 100;
-let needTemperature = Math.min((signal.out.load / maxPower) * 50, 50);
-signal.in.fissionRate = (50 * needTemperature + 5000) / signal.out.allHeatPotential;`
-        break;
-      }
-      case 3: {
-        code = `let maxPower = 5000;
-signal.in.turbineOutput = 100;
-if (!memory.lastTemperature) memory.lastTemperature = 0;
-let temperatureDiff = Math.abs(memory.lastTemperature - signal.out.temperature);
-let currentTemperature = signal.out.temperature / 100;
-let needTemperature = Math.min((signal.out.load / maxPower) * 50, 50);
-let needFissionRate = (50 * needTemperature + 5000) / signal.out.allHeatPotential;
-if (currentTemperature >= 50 || temperatureDiff * 0.07 > Math.abs(needTemperature - currentTemperature)) {
-  signal.in.fissionRate = needFissionRate;
-} else {
-  const c = needTemperature > currentTemperature ? 5500 : 4500;
-  signal.in.fissionRate = (50 * currentTemperature + c) / signal.out.allHeatPotential;
-}
-memory.lastTemperature = signal.out.temperature;
-`
-        break;
-      }
-      case 4: {
-        code = `// 思路地址：https://tieba.baidu.com/p/8663839130
-let baseMaxPower = 5000;
-signal.in.turbineOutput = signal.out.allHeatPotential == 80 ? 85 : 99.1;
-const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
-// 将这个数称之为最大功率因数，用于自适应反应堆功率升级，4170 * 1.09 * 1.1 = 4999.83 ≈ 5000，由于游戏内信号延迟，这个数字会有短时间的微小波动，但没什么影响
-if (!memory.maxPowerFactor) memory.maxPowerFactor = 1;
-if (signal.out.power > 0) memory.maxPowerFactor = clamp(signal.out.temperature / signal.out.power, 4170 / baseMaxPower, 5000 / baseMaxPower);
-let targetTemperature = memory.maxPowerFactor * signal.out.load;
-let temperatureDiff = clamp(targetTemperature - signal.out.temperature, -999, 999);
-if (/^\\-?(?:\\d\\d?|1[0,1]\\d)(\\..+)?$/.test(temperatureDiff.toString())) {
-  // 上面的正则等同于Math.abs(temperatureDiff) < 120
-  // do nothing (游戏内直连下一个逻辑的组件)
-} else if (/^\\-?(?:1[2-9].|[2-9]..)(\\..+)?$/.test(temperatureDiff.toString())) {
-  // 上面的正则等同于Math.abs(temperatureDiff) >= 120
-  // 下面的正则单纯判断正负
-  targetTemperature = signal.out.temperature + (/^\\-.+/.test(temperatureDiff.toString()) ? -1150 : 1150);
-} else {
-  throw new Error('上面两个正则互为补集，不应当执行到这里');
-}
-let turbineConsumeHeat = signal.out.allHeatPotential == 80 ? 8500 : 9909;
-let spawnHeat = targetTemperature + turbineConsumeHeat;
-// 正则等同于signal.out.temperature < 5200, 10000是个魔法值，目的是尽可能压低裂变防止过热
-let heatPotentialFactor = signal.out.allHeatPotential * (/^(?:[1-4]?.{1,3}|5[0,1]..)$/.test(signal.out.temperature.toString()) ? 2 : 10000);
-signal.in.fissionRate = spawnHeat / heatPotentialFactor;
-`
-        break;
-      }
-      case 5: {
-        code = `// 思路地址：https://www.bilibili.com/video/BV14sLoz4ET3/
-const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
-// 转移函数
-const transfer = (der, temp) => {
-  if (!memory.transferS) memory.transferS = 0;
-  const ds = der * (temp - memory.transferS);
-  memory.transferS = ds + memory.transferS;
-  return ds * 60 + memory.transferS;
-};
-// 获取目标温度(限制目标温度变化范围正负16.7)
-const getTargetTemp = () => {
-  if (!memory.powerFactor) memory.powerFactor = 1;
-  // 温度或功率信号为0时无法估算功率因数，保留上次有效值。
-  if (signal.out.temperature > 0 && signal.out.power > 0) {
-    memory.powerFactor = signal.out.power / signal.out.temperature;
-  }
-  let targetTemperature = clamp(signal.out.load / memory.powerFactor, 0, 5000);
-  targetTemperature = 2 * targetTemperature - signal.out.temperature;
-  if (!memory.fixTemp) memory.fixTemp = 0;
-  targetTemperature = memory.fixTemp + clamp(targetTemperature - memory.fixTemp, -16.7, 16.7);
-  memory.fixTemp = targetTemperature;
-  return targetTemperature;
-};
-// 微分
-const derivativeJudgment = () => {
-  const heatFactor = signal.out.allHeatPotential / 4500;
-  let useTrueOutput = false;
-  if (memory.derTimer >= 0.04) {
-      useTrueOutput = true;
-  } else {
-      if (memory.derCheck == signal.out.load) {
-        memory.derTimer++;
-      } else {
-        memory.derCheck = signal.out.load;
-        memory.derTimer = 0;
-      }
-  }
-  return useTrueOutput ? heatFactor : 0.6;
-};
-const targetTemperature = transfer(derivativeJudgment(), getTargetTemp());
+  initializePresetMenu('actionPresetMenu', 'textActionCode', presetTemplates.action);
+  initializePresetMenu('loadPresetMenu', 'textLoadFormula', presetTemplates.load);
 
-let turbineConsumeHeat = signal.out.allHeatPotential == 80 ? 8600 : 9904;
-let spawnHeat = targetTemperature + turbineConsumeHeat;
-// 正则等同于signal.out.temperature < 5050，目的是过热时尽可能压低裂变防止过热
-let heatPotentialFactor = signal.out.allHeatPotential * (/^(0|[1-9]\\d{0,2}|[1-4]\\d{3}|50[0-4]\\d)$/.test(signal.out.temperature.toString()) ? 2 : 999999);
-signal.in.fissionRate = spawnHeat / heatPotentialFactor;
-signal.in.turbineOutput = signal.out.allHeatPotential === 80 ? 86 : 99.04;
-`
-        break;
-      }
-      case 6: {
-        code = `const deltaTime = 1 / 60;
-const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
+  const controller = new SimulationController({ onUpdate: renderSimulation, onError: showSimulationError });
 
-// 将这个数称之为最大功率因数，用于自适应反应堆功率升级，由于游戏内信号取整，这个数字会有微小波动，虽然会有影响但是没办法
-if (!memory.maxPowerFactor) memory.maxPowerFactor = 1;
-if (signal.out.power > 0) memory.maxPowerFactor = signal.out.temperature / signal.out.power;
-
-if (!memory.lastTargetTemperature) memory.lastTargetTemperature = 0; // 注意 因为时序问题，必须先放这个内存组件再执行LoadNeedTemperature的计算
-const LoadNeedTemperature = clamp(memory.maxPowerFactor * signal.out.load, 0, 5000);
-
-// 根据预测趋势修正温控限制
-//const maxTemperatureFrameDiff = 1000 * deltaTime; // 16.66666666 => 16.7
-let temperatureDiff = 16.66667 * clamp((LoadNeedTemperature - signal.out.temperature) / 50, -1, 1);
-const forecastFactor = 6000 / signal.out.allHeatPotential;
-let forecastTemperatureDiff = forecastFactor * Math.round(LoadNeedTemperature - memory.lastTargetTemperature);
-const forecastTemperature = LoadNeedTemperature + forecastTemperatureDiff;
-memory.lastTargetTemperature = LoadNeedTemperature;
-const targetTemperature = signal.out.temperature + temperatureDiff;
-let outputTemperature = (signal.out.temperature * (deltaTime - 1) + targetTemperature) / deltaTime;
-if (forecastTemperatureDiff * temperatureDiff < 0) {
-  // 这个不需要在游戏中实现，因为游戏中使用异或组件实现min和max，如果其中一个为0就会造成提早return的效果，写在代码里是为了验证即使提早返回也不影响控制功能
-  if (outputTemperature == 0 || forecastTemperature == 0) {
-    signal.in.turbineOutput = signal.out.allHeatPotential === 80 ? 85 : 99.1;
-    return;
-  }
-  outputTemperature = forecastTemperatureDiff < 0 ? Math.min(outputTemperature, forecastTemperature) : Math.max(outputTemperature, forecastTemperature);
-}
-let turbineConsumeHeat = signal.out.allHeatPotential === 80 ? 8500 : 9910;
-let spawnHeat = outputTemperature + turbineConsumeHeat;
-// 正则等同于signal.out.temperature < 5200, 10000是个魔法值，目的是压低裂变防止过热
-let heatPotentialFactor = signal.out.allHeatPotential * (/^(?:[1-4]?.{1,3}|5[0,1]..)$/.test(signal.out.temperature.toString()) ? 2 : 10000);
-signal.in.fissionRate = spawnHeat / heatPotentialFactor;
-signal.in.turbineOutput = signal.out.allHeatPotential === 80 ? 85 : 99.1;
-`
-        break;
-      }
-    }
-    if (code && (!document.getElementById('textActionCode').value || confirm('是否用预设模板覆盖当前内容？'))) {
-      document.getElementById('textActionCode').value = code;
-    }
+  function renderSimulation({ history, fission, turbine }) {
+    powerLoadChart.setOption({
+      series: [{ name: '功率', data: history.power }, { name: '负载', data: history.load }]
+    });
+    fissionRateChart.setOption({
+      series: [
+        { name: '信号值', data: history.fissionSignal },
+        { name: '目标值', data: history.fissionTarget },
+        { name: '实际值', data: history.fissionActual },
+      ]
+    });
+    fissionRateGaugeChart.setOption(gaugeOption(fission, '裂变速率'));
+    turbineOutputChart.setOption({
+      series: [
+        { name: '信号值', data: history.turbineSignal },
+        { name: '目标值', data: history.turbineTarget },
+        { name: '实际值', data: history.turbineActual },
+      ]
+    });
+    turbineOutputGaugeChart.setOption(gaugeOption(turbine, '涡轮输出'));
+    temperatureChart.setOption({ series: [{ data: history.temperature }] });
   }
 
-  let runFlag = false;
-  let pauseFlag = false;
-  let currentReactor;
-  let currentCycleFn;
+  function gaugeOption(gauge, name) {
+    return {
+      series: [{
+        axisLine: { lineStyle: { width: 12, color: [
+          [gauge.allowed[0] / 100, '#FF6E76'],
+          [gauge.optimal[0] / 100, '#FDDD60'],
+          [gauge.optimal[1] / 100, '#7CFFB2'],
+          [gauge.allowed[1] / 100, '#FDDD60'],
+          [1, '#FF6E76'],
+        ] } },
+        data: [{ value: gauge.target, name }]
+      }]
+    };
+  }
+
+  function showSimulationError(error) {
+    console.error(error);
+    alert('模拟发生异常，请检查代码或重置后重试。如果可以的话还请截图反馈一下。\n' + String(error));
+  }
 
   function getFuelRodTypeList() {
-    const map = ['none', 'uranium', 'thorium', 'fulgurium'];
-    const fuelRodType1 = FuelRodType[map[document.formFuelRods.fuelRod1.value]];
-    const fuelRodType2 = FuelRodType[map[document.formFuelRods.fuelRod2.value]];
-    const fuelRodType3 = FuelRodType[map[document.formFuelRods.fuelRod3.value]];
-    const fuelRodType4 = FuelRodType[map[document.formFuelRods.fuelRod4.value]];
-    return [fuelRodType1, fuelRodType2, fuelRodType3, fuelRodType4].map(it => it ? it.type : undefined);
+    const form = document.formFuelRods;
+    return [form.fuelRod1.value, form.fuelRod2.value, form.fuelRod3.value, form.fuelRod4.value]
+      .map(value => value || undefined);
   }
 
   function updateFuelRods() {
-    if (currentReactor) {
-      const list = getFuelRodTypeList();
-      for (let i = 0; i < list.length; i++) {
-        const type = list[i];
-        if (type && (!currentReactor.fuelsContainer[i] || type !== currentReactor.fuelsContainer[i].typeName)) {
-          currentReactor.fuelsContainer[i] = new FuelRod(type);
-        }
-        if (!type) {
-          currentReactor.fuelsContainer[i] = undefined;
-        }
-      }
-    }
+    controller.setFuelRods(getFuelRodTypeList());
   }
 
   function handleBtnStart() {
-    if (runFlag) return;
+    if (controller.running) return;
     const formReactorParams = document.formReactorParams;
     if (!formReactorParams.checkValidity()) {
       formReactorParams.reportValidity();
@@ -1289,258 +1071,35 @@ signal.in.turbineOutput = signal.out.allHeatPotential === 80 ? 85 : 99.1;
       return;
     }
 
-    runFlag = true;
-
-    const loadFormula = document.getElementById('textLoadFormula').value;
-    const actionCode = document.getElementById('textActionCode').value;
-
-    const genFnWithContext = (context, code) => {
-      context.console = window.console;
-      return Function(Object.keys(context).join(','), "'use strict';" + code).bind(context);
-    };
-
-    const loadContext = { memory: {}, deltaTime: 0, output: { load: 0 } };
-    const loadEvalFn = genFnWithContext(loadContext, loadFormula);
-    const loadFn = (deltaTime) => {
-      loadContext.deltaTime = deltaTime;
-      loadEvalFn(...Object.values(loadContext));
-      return loadContext.output.load;
+    try {
+      controller.start({
+        baseMaxPowerOutput: parseInt(formReactorParams.reactorBaseMaxPowerOut.value),
+        hasTalentEngineerBuzzing: formReactorParams.engineerTalentBuzzing.checked,
+        upgradeLevelIncreaseReactorOutput: parseInt(formReactorParams.reactorMaxPowerOutUpgrade.value),
+        fuelTypeNames: getFuelRodTypeList(),
+        initFissionRate: parseFloat(formSimulationParam.initFissionRate.value),
+        initTurbineOutput: parseFloat(formSimulationParam.initTurbineOutput.value),
+        tps: parseFloat(formSimulationParam.tps.value),
+        speed: parseFloat(formSimulationParam.speed.value),
+        signalDelay: parseFloat(formSimulationParam.signalDelay.value),
+        actionCode: document.getElementById('textActionCode').value,
+        loadFormula: document.getElementById('textLoadFormula').value,
+      });
+      document.getElementById('btnStart').disabled = true;
+      document.getElementById('btnReset').disabled = false;
+    } catch (error) {
+      showSimulationError(error);
     }
-
-    const actionContext = { memory: {}, signal: {} };
-    const actionEvalFn = genFnWithContext(actionContext, actionCode);
-    const actionFn = (signal) => {
-      actionContext.signal = signal;
-      actionEvalFn(...Object.values(actionContext));
-    }
-
-    document.getElementById('btnStart').disabled = true;
-    // document.getElementById('btnPauseChange').disabled = false;
-    document.getElementById('btnReset').disabled = false;
-
-    currentCycleFn = genRunCycleFn(
-      parseInt(formReactorParams.reactorBaseMaxPowerOut.value),
-      formReactorParams.engineerTalentBuzzing.checked,
-      parseInt(formReactorParams.reactorMaxPowerOutUpgrade.value),
-      getFuelRodTypeList(),
-      parseFloat(formSimulationParam.initFissionRate.value),
-      parseFloat(formSimulationParam.initTurbineOutput.value),
-      parseFloat(formSimulationParam.tps.value),
-      parseFloat(formSimulationParam.speed.value),
-      parseFloat(formSimulationParam.signalDelay.value),
-      actionFn,
-      loadFn,
-    );
-    currentCycleFn();
-  }
-
-  function handleBtnPause() {
-    // TODO
   }
 
   function handleBtnReset() {
-    runFlag = false;
-    currentCycleFn = undefined;
-    currentReactor = undefined;
+    controller.reset();
     resetChartData();
-
     document.getElementById('btnStart').disabled = false;
-    // document.getElementById('btnPauseChange').disabled = true;
     document.getElementById('btnReset').disabled = true;
   }
 
-  function genRunCycleFn(
-    baseMaxPowerOutput, hasTalentEngineerBuzzing, upgradeLevelIncreaseReactorOutput,
-    fuelTypeNameList, initFissionRate, initTurbineOutput,
-    tps, speed, signalDelay,
-    actionFn, loadFn
-  ) {
-    const reactor = new Reactor(baseMaxPowerOutput, 0.2);
-    reactor.hasTalentEngineerBuzzing = hasTalentEngineerBuzzing;
-    reactor.upgradeLevelIncreaseReactorOutput = upgradeLevelIncreaseReactorOutput;
-    for (let i = 0; i < 4; i++) {
-      if (fuelTypeNameList[i] && FuelRodType[fuelTypeNameList[i]]) {
-        reactor.fuelsContainer[i] = new FuelRod(fuelTypeNameList[i]);
-      }
-    }
-    reactor.fissionRate = initFissionRate;
-    reactor.targetFissionRate = initFissionRate;
-    reactor.signal.in.fissionRate = initFissionRate;
-    reactor.turbineOutput = initTurbineOutput;
-    reactor.targetTurbineOutput = initTurbineOutput;
-    reactor.signal.in.turbineOutput = initTurbineOutput;
-    currentReactor = reactor;
-
-    let timer = 0;
-    const logicFramesPerSecond = 60;
-    const logicStep = 1 / logicFramesPerSecond;
-    const intervalTime = 1000 / tps;
-    let nextCycleTime = performance.now();
-    const signalBuffer = [];
-    const chartShowSeconds = 20;
-    const powerData = [];
-    const loadData = [];
-    const fissionRateSignalData = [];
-    const fissionRateTargetData = [];
-    const fissionRateActuallyData = [];
-    const turbineOutputSignalData = [];
-    const turbineOutputTargetData = [];
-    const turbineOutputActuallyData = [];
-    const temperatureData = [];
-    const initLen = logicFramesPerSecond * chartShowSeconds;
-    for (let i = 0; i < initLen; i++) {
-      powerData[initLen - 1 - i] = [0 - i * logicStep, 0];
-      loadData[initLen - 1 - i] = [0 - i * logicStep, 0];
-      fissionRateSignalData[initLen - 1 - i] = [0 - i * logicStep, 0];
-      fissionRateTargetData[initLen - 1 - i] = [0 - i * logicStep, 0];
-      fissionRateActuallyData[initLen - 1 - i] = [0 - i * logicStep, 0];
-      turbineOutputSignalData[initLen - 1 - i] = [0 - i * logicStep, 0];
-      turbineOutputTargetData[initLen - 1 - i] = [0 - i * logicStep, 0];
-      turbineOutputActuallyData[initLen - 1 - i] = [0 - i * logicStep, 0];
-      temperatureData[initLen - 1 - i] = [0 - i * logicStep, 0];
-    }
-
-    const logic = () => {
-      timer += logicStep;
-      let load;
-      try {
-        load = loadFn(logicStep);
-      } catch (e) {
-        throw new Error(`执行负载生成代码时发生异常：${String(e)}`);
-      }
-      reactor.update(logicStep, load);
-      powerData.shift();
-      loadData.shift();
-      fissionRateSignalData.shift();
-      fissionRateTargetData.shift();
-      fissionRateActuallyData.shift();
-      turbineOutputSignalData.shift();
-      turbineOutputTargetData.shift();
-      turbineOutputActuallyData.shift();
-      temperatureData.shift();
-      temperatureData.push([timer, reactor.temperature * 100]);
-      powerData.push([timer, reactor.signal.out.power]);
-      loadData.push([timer, load]);
-      fissionRateSignalData.push([timer, reactor.signal.in.fissionRate]);
-      fissionRateTargetData.push([timer, reactor.targetFissionRate]);
-      fissionRateActuallyData.push([timer, reactor.fissionRate]);
-      turbineOutputSignalData.push([timer, reactor.signal.in.turbineOutput]);
-      turbineOutputTargetData.push([timer, reactor.targetTurbineOutput]);
-      turbineOutputActuallyData.push([timer, reactor.turbineOutput]);
-      signalBuffer.push(JSON.parse(JSON.stringify(reactor.signal)));
-      if (signalBuffer.length > signalDelay) {
-        const newSignal = signalBuffer.shift();
-        try {
-          actionFn(newSignal);
-        } catch (e) {
-          throw new Error(`执行信号处理代码时发生异常：${String(e)}`);
-        }
-        const newFissionRate = newSignal.in.fissionRate;
-        const newTurbineOutput = newSignal.in.turbineOutput;
-        // 要求数字类型；NaN 沿用原逻辑忽略，其他数值由反应堆限幅。
-        if (typeof newFissionRate !== 'number') throw new Error('裂变速率输入必须为数字');
-        if (typeof newTurbineOutput !== 'number') throw new Error('涡轮输出输入必须为数字');
-        if (!Number.isNaN(newFissionRate)) reactor.signal.in.fissionRate = newFissionRate;
-        if (!Number.isNaN(newTurbineOutput)) reactor.signal.in.turbineOutput = newTurbineOutput;
-      }
-    }
-
-    const fn = () => {
-      try {
-        if (!runFlag || currentCycleFn !== fn) return;
-        for (let i = 0; i < speed; i++) {
-          logic();
-        }
-        powerLoadChart.setOption({
-          series: [
-            { name: '功率', data: powerData },
-            { name: '负载', data: loadData },
-          ]
-        });
-        fissionRateChart.setOption({
-          series: [
-            {
-              name: '信号值',
-              data: fissionRateSignalData,
-            },
-            {
-              name: '目标值',
-              data: fissionRateTargetData,
-            },
-            {
-              name: '实际值',
-              data: fissionRateActuallyData,
-            },
-          ]
-        });
-        fissionRateGaugeChart.setOption({
-          series: [{
-            axisLine: {
-              lineStyle: {
-                width: 12,
-                color: [
-                  [reactor.allowedFissionRate[0] / 100, '#FF6E76'],
-                  [reactor.optimalFissionRate[0] / 100, '#FDDD60'],
-                  [reactor.optimalFissionRate[1] / 100, '#7CFFB2'],
-                  [reactor.allowedFissionRate[1] / 100, '#FDDD60'],
-                  [1, '#FF6E76'],
-                ],
-              },
-            },
-            data: [{ value: reactor.targetFissionRate, name: '裂变速率' }]
-          }]
-        });
-        turbineOutputChart.setOption({
-          series: [
-            {
-              name: '信号值',
-              data: turbineOutputSignalData,
-            },
-            {
-              name: '目标值',
-              data: turbineOutputTargetData,
-            },
-            {
-              name: '实际值',
-              data: turbineOutputActuallyData,
-            },
-          ]
-        });
-        turbineOutputGaugeChart.setOption({
-          series: [{
-            axisLine: {
-              lineStyle: {
-                width: 12,
-                color: [
-                  [reactor.allowedTurbineOutput[0] / 100, '#FF6E76'],
-                  [reactor.optimalTurbineOutput[0] / 100, '#FDDD60'],
-                  [reactor.optimalTurbineOutput[1] / 100, '#7CFFB2'],
-                  [reactor.allowedTurbineOutput[1] / 100, '#FDDD60'],
-                  [1, '#FF6E76'],
-                ],
-              },
-            },
-            data: [{ value: reactor.targetTurbineOutput, name: '涡轮输出' }]
-          }]
-        });
-        temperatureChart.setOption({ series: [{ data: temperatureData }] });
-        // 计入本轮计算和绘图耗时，避免每一轮都额外等待完整的帧间隔。
-        const currentTime = performance.now();
-        nextCycleTime = Math.max(nextCycleTime + intervalTime, currentTime);
-        setTimeout(() => {
-          fn();
-        }, nextCycleTime - currentTime);
-      } catch (e) {
-        console.log(e);
-        alert('模拟运行时发生异常，请刷新页面重试。如果可以的话还请截图反馈一下。\n' + String(e));
-      }
-    };
-    return fn;
-  }
-
   resetChartData();
-</script>
-<script>
 </script>
 </body>
 </html>

@@ -116,12 +116,15 @@ const gameMath = (() => {
   }
 
   const helpers = {
+    // 四则运算按 float 计算，默认限制在 -999999～999999，可通过 min/max 覆盖。
     add: (a, b, min = -999999, max = 999999) => arithmetic(a, b, (x, y) => x + y, min, max),
     sub: (a, b, min = -999999, max = 999999) => arithmetic(a, b, (x, y) => x - y, min, max),
     mul: (a, b, min = -999999, max = 999999) => arithmetic(a, b, (x, y) => x * y, min, max),
+    // 除数绝对值小于 0.0001 时游戏不发送信号，这里返回 NaN。
     div: (a, b, min = -999999, max = 999999) => arithmetic(a, b, (x, y) => nearlyZero(y) ? NaN : x / y, min, max),
     mod: (a, b = 1) => {
       const modulus = numberOrZero(b);
+      // 接近零的模数按 1 处理。
       return Math.fround(numberOrZero(a) % (nearlyZero(modulus) ? 1 : modulus));
     },
     pow: (a, b = 1) => {
@@ -129,8 +132,10 @@ const gameMath = (() => {
       const exponent = numberOrZero(b);
       // .NET Math.Pow 和 JavaScript Math.pow 在这些特殊值上有不同约定。
       if (base === 1 || (base === -1 && Math.abs(exponent) === Infinity)) return 1;
+      // 两者使用双精度计算后再转为 float，不同平台可能有末位差异。
       return Math.fround(Math.pow(base, exponent));
     },
+    // 中点取偶数，与 JavaScript Math.round 的中点规则不同。
     round: input => unary(input, value => {
       if (!Number.isFinite(value)) return value;
       const lower = Math.floor(value);
@@ -144,13 +149,16 @@ const gameMath = (() => {
     }),
     floor: input => unary(input, Math.floor),
     abs: input => unary(input, Math.abs),
+    // 负数开方返回 NaN，代表游戏中没有有效信号。
     sqrt: input => unary(input, value => Math.fround(Math.sqrt(value))),
+    // 游戏的阶乘组件最多计算到 20。
     factorial: input => unary(input, value => {
       const limit = Math.trunc(Math.min(value, 20));
       let result = 1n;
       for (let i = limit; i > 0; i--) result *= BigInt(i);
       return Math.fround(Number(result));
     }),
+    // 三角函数默认使用角度，useRadians 为 true 时使用弧度。
     // 浏览器数学库与游戏的 MathF 可能有末位差异。
     sin: (input, useRadians = false) => Math.fround(Math.sin(toRadians(input, useRadians))),
     cos: (input, useRadians = false) => Math.fround(Math.cos(toRadians(input, useRadians))),
@@ -159,6 +167,7 @@ const gameMath = (() => {
       // 余数接近 π/2 时，游戏保留转换后的弧度值。
       return nearlyEqual(Math.fround(angle % pi), piOver2) ? angle : Math.fround(Math.tan(angle));
     },
+    // 游戏在反正弦或反余弦的输入超出 [-1, 1] 时直接返回该输入。
     asin: (input, useRadians = false) => {
       const value = numberOrZero(input);
       return value >= -1 && value <= 1 ? fromRadians(Math.fround(Math.asin(value)), useRadians) : value;

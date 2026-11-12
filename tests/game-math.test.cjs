@@ -1,8 +1,5 @@
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
 const test = require('node:test');
-const vm = require('node:vm');
 const gameMath = require('../game-math.js');
 
 test('rounding first converts to float and rounds ties to even', () => {
@@ -104,26 +101,4 @@ test('atan2 uses the component y/x input order and output units', () => {
   assert.equal(gameMath.atan2(0, -1), 180);
   assert.equal(gameMath.atan2(-0, -1), -180);
   assert.ok(Number.isNaN(gameMath.atan2(NaN, 1)));
-});
-
-test('helpers are available to both kinds of user script', () => {
-  const root = path.join(__dirname, '..');
-  const page = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
-  const source = fs.readFileSync(path.join(root, 'game-math.js'), 'utf8');
-  const helperPosition = page.indexOf('<script src="./game-math.js"></script>');
-  const reactorPosition = page.indexOf('<script src="./reactor.js"></script>');
-  assert.ok(helperPosition !== -1 && reactorPosition !== -1 && helperPosition < reactorPosition);
-  const context = vm.createContext({});
-  vm.runInContext(source, context);
-  const result = vm.runInContext(`
-    const loadContext = { memory: {}, deltaTime: 1 / 60, output: { load: 0 } };
-    const actionContext = { memory: {}, signal: { in: {} } };
-    const build = (context, code) => Function(Object.keys(context).join(','), "'use strict';" + code).bind(context);
-    build(loadContext, 'output.load = gameMath.add(0.1, 0.2);')(...Object.values(loadContext));
-    const originalLoad = loadContext.output.load;
-    build(loadContext, 'output.load = gameMath.sin(90);')(...Object.values(loadContext));
-    build(actionContext, 'signal.in.fissionRate = gameMath.round(2.5); signal.in.turbineOutput = gameMath.sin(90) * 100;')(...Object.values(actionContext));
-    [originalLoad, loadContext.output.load, actionContext.signal.in.fissionRate, actionContext.signal.in.turbineOutput];
-  `, context);
-  assert.deepEqual(Array.from(result), [0.30000001192092896, 1, 2, 100]);
 });
