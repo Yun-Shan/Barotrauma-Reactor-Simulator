@@ -161,6 +161,8 @@ const gameMath = (() => {
     // 三角函数默认使用角度，useRadians 为 true 时使用弧度。
     // 浏览器数学库与游戏的 MathF 可能有末位差异。
     sin: (input, useRadians = false) => Math.fround(Math.sin(toRadians(input, useRadians))),
+    // 游戏正弦振荡器调用 double Math.Sin；调用方负责相位和角度的 float 舍入。
+    sinDouble: input => Math.sin(input),
     cos: (input, useRadians = false) => Math.fround(Math.cos(toRadians(input, useRadians))),
     tan: (input, useRadians = false) => {
       const angle = toRadians(input, useRadians);

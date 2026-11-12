@@ -1,0 +1,31 @@
+<Root>
+  <Item identifier="circuitbox" ID="1">
+    <ConnectionPanel>
+      <input name="signal_in1" />
+      <input name="signal_in2" />
+      <output name="signal_out1" />
+    </ConnectionPanel>
+    <CircuitBox>
+      <InputNode pos="-512,0">
+        <ConnectionLabelOverride name="signal_in1" value="A" />
+        <ConnectionLabelOverride name="signal_in2" value="B" />
+      </InputNode>
+      <OutputNode pos="512,0">
+        <ConnectionLabelOverride name="signal_out1" value="A + B" />
+      </OutputNode>
+      <Component id="0" position="0,0" backingitemid="0,0" usedresource="fpgacircuit" Class=<<<STRINGSTART>>>AdderComponent<<<STRINGEND>>> ClampMin=<<<STRINGSTART>>>-999999<<<STRINGEND>>> ClampMax=<<<STRINGSTART>>>999999<<<STRINGEND>>> TimeFrame=<<<STRINGSTART>>>0<<<STRINGEND>>> item=<<<STRINGSTART>>>addercomponent<<<STRINGEND>>> />
+      <Wire id="0" backingitemid="" prefab="redwire">
+        <From name="signal_in1" target="" />
+        <To name="signal_in1" target="0" />
+      </Wire>
+      <Wire id="1" backingitemid="" prefab="bluewire">
+        <From name="signal_in2" target="" />
+        <To name="signal_in2" target="0" />
+      </Wire>
+      <Wire id="2" backingitemid="" prefab="greenwire">
+        <From name="signal_out" target="0" />
+        <To name="signal_out1" target="" />
+      </Wire>
+    </CircuitBox>
+  </Item>
+</Root>
